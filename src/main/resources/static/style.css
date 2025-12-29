@@ -1,0 +1,17 @@
+/* The classic yellow header */
+.sahibinden-header {
+    background-color: #ffda00; /* Sahibinden Yellow */
+    border-bottom: 3px solid #e0c000;
+}
+
+/* Hover effect for cards */
+.advert-card {
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.advert-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    border-color: #007bff;
+}
