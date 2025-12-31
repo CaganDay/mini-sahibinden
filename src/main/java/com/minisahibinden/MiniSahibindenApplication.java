@@ -1,9 +1,10 @@
+// go to http://localhost:8080/
 package com.minisahibinden;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication	
 public class MiniSahibindenApplication {
 
 	public static void main(String[] args) {

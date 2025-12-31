@@ -1,34 +1,67 @@
 package com.minisahibinden.controller;
 
+import com.minisahibinden.entity.Category;
+import com.minisahibinden.entity.Listing;
+import com.minisahibinden.repository.CategoryRepository;
+import com.minisahibinden.repository.ListingRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 public class HomeController {
 
+    // 1. Define the Repositories we need
+    private final CategoryRepository categoryRepository;
+    private final ListingRepository listingRepository;
+
+    // 2. Constructor Injection (Spring automatically connects them here)
+    public HomeController(CategoryRepository categoryRepository, ListingRepository listingRepository) {
+        this.categoryRepository = categoryRepository;
+        this.listingRepository = listingRepository;
+    }
+
     @GetMapping("/")
-    public String home(Model model) {
-        // 1. DUMMY CATEGORIES
-        List<String> categories = List.of("Real Estate", "Vehicles", "Electronics", "Home & Garden");
-        model.addAttribute("categories", categories);
-
-        // 2. DUMMY ADVERTS (Simulating database rows)
-        // In the future, this will come from 'advertRepository.findAll()'
-        List<Map<String, Object>> dummyAds = new ArrayList<>();
+    public String home(Model model, 
+                       @RequestParam(name = "keyword", required = false) String keyword,
+                       @RequestParam(name = "categoryId", required = false) Long categoryId) {
         
-        dummyAds.add(Map.of("title", "2015 Honda Civic Clean", "price", "850,000", "city", "Istanbul"));
-        dummyAds.add(Map.of("title", "iPhone 13 Pro Max", "price", "42,000", "city", "Ankara"));
-        dummyAds.add(Map.of("title", "Sea View Apartment", "price", "12,500,000", "city", "Izmir"));
-        dummyAds.add(Map.of("title", "Gaming Laptop", "price", "25,000", "city", "Bursa"));
-        dummyAds.add(Map.of("title", "Winter Tires (Set of 4)", "price", "4,000", "city", "Erzurum"));
+        List<Category> categories = categoryRepository.findAll();
+        List<Listing> listings;
 
-        model.addAttribute("adverts", dummyAds);
+        if (keyword != null && !keyword.isEmpty()) {
+            // Case 1: Use our CUSTOM SQL for searching
+            listings = listingRepository.searchListingsSQL(keyword);
+            
+        } else if (categoryId != null) {
+            // Case 2: Use our CUSTOM SQL for filtering
+            listings = listingRepository.filterByCategorySQL(categoryId);
+            
+        } else {
+            // Case 3: Standard Find All (Still using JPA default here)
+            listings = listingRepository.findAll();
+        }
 
+        model.addAttribute("categories", categories);
+        model.addAttribute("listings", listings);
+        
         return "home";
+    }
+
+    @GetMapping("/listing/{id}")
+    public String listingDetail(@PathVariable Long id, Model model) {
+        // 1. Try to find the listing in the DB by ID
+        Listing listing = listingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid listing Id:" + id));
+
+        // 2. Add it to the model so HTML can see it
+        model.addAttribute("listing", listing);
+
+        // 3. Return the new HTML file name
+        return "listing-detail";
     }
 }
