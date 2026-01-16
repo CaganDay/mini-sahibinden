@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Query Results - Mini Sahibinden</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .advert-card:hover { transform: translateY(-5px); transition: 0.3s; cursor: pointer; }
+        .query-info { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-warning pb-3 pt-3" style="background-color: #f8f9fa!important; border-bottom: 1px solid #ddd;">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-dark" th:href="@{/}">mini<span class="bg-warning px-1 rounded border border-dark">sahibinden</span>.com</a>
+        <div class="navbar-nav ms-auto">
+            <a class="btn btn-outline-dark btn-sm ms-2" th:href="@{/queries}">
+                <i class="fa-solid fa-arrow-left"></i> Back to Queries
+            </a>
+            <a class="btn btn-outline-dark btn-sm ms-2" th:href="@{/}">
+                <i class="fa-solid fa-home"></i> Home
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <!-- Query Info Card -->
+    <div class="card shadow-sm mb-4 query-info text-white">
+        <div class="card-body">
+            <h3 class="card-title mb-2">
+                <i class="fa-solid fa-database"></i> <span th:text="${queryName}">Query Name</span>
+            </h3>
+            <p class="card-text mb-2" th:text="${queryDescription}">Query Description</p>
+            <div class="d-flex align-items-center">
+                <span class="badge bg-light text-dark me-2">
+                    <i class="fa-solid fa-list"></i> Results: <span th:text="${#lists.size(listings)}">0</span>
+                </span>
+                <a th:href="@{/queries}" class="btn btn-light btn-sm">
+                    <i class="fa-solid fa-redo"></i> Try Another Query
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div th:if="${#lists.isEmpty(listings)}" class="alert alert-warning">
+        <i class="fa-solid fa-exclamation-triangle"></i> No listings found matching your criteria.
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4" th:if="${!#lists.isEmpty(listings)}">
+        <div class="col" th:each="ad : ${listings}">
+            <div class="card h-100 shadow-sm advert-card">
+                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;">
+                    <i class="fa-solid fa-image fa-3x"></i>
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title text-truncate" th:text="${ad.title}">Ad Title</h5>
+                    <p class="card-text text-primary fw-bold mb-1" 
+                       th:text="${#numbers.formatDecimal(ad.price, 0, 'COMMA', 0, 'POINT')} + ' TL'">
+                        0 TL
+                    </p>
+                    
+                    <small class="text-muted d-block mb-1">
+                        <i class="fa-solid fa-tag"></i> 
+                        <span th:text="${ad.category != null ? ad.category.name : 'Uncategorized'}">Category</span>
+                    </small>
+                    
+                    <small class="text-muted d-block">
+                        <i class="fa-solid fa-user"></i> 
+                        <span th:if="${ad.user != null}" th:text="${ad.user.firstName + ' ' + ad.user.lastName}">User</span>
+                        <span th:if="${ad.user == null}">Unknown User</span>
+                    </small>
+                </div>
+                <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center">
+                    <small class="text-muted" th:text="${ad.datePosted}">Date</small>
+                    <a th:href="@{/listing/{id}(id=${ad.id})}" class="btn btn-sm btn-outline-primary">
+                        View <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Query Parameters Display (if any) -->
+    <div class="card shadow-sm mt-4" th:if="${minListingCount != null || topN != null || minPrice != null}">
+        <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="fa-solid fa-cog"></i> Query Parameters</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3" th:if="${minListingCount != null}">
+                    <strong>Min Listing Count:</strong> <span th:text="${minListingCount}"></span>
+                </div>
+                <div class="col-md-3" th:if="${topN != null}">
+                    <strong>Top N:</strong> <span th:text="${topN}"></span>
+                </div>
+                <div class="col-md-3" th:if="${minPrice != null}">
+                    <strong>Price Range:</strong> 
+                    <span th:text="${#numbers.formatDecimal(minPrice, 0, 'COMMA', 0, 'POINT')}"></span> - 
+                    <span th:text="${#numbers.formatDecimal(maxPrice, 0, 'COMMA', 0, 'POINT')}"></span> TL
+                </div>
+                <div class="col-md-3" th:if="${userNamePattern != null && !userNamePattern.isEmpty()}">
+                    <strong>User Pattern:</strong> <span th:text="${userNamePattern}"></span>
+                </div>
+                <div class="col-md-3" th:if="${daysBack != null}">
+                    <strong>Days Back:</strong> <span th:text="${daysBack}"></span>
+                </div>
+                <div class="col-md-3" th:if="${keyword != null && !keyword.isEmpty()}">
+                    <strong>Keyword:</strong> <span th:text="${keyword}"></span>
+                </div>
+                <div class="col-md-3" th:if="${sortBy != null}">
+                    <strong>Sort By:</strong> <span th:text="${sortBy}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="mt-5 py-3 text-center text-muted border-top">
+    <small>&copy; 2025 Mini-Sahibinden Project</small>
+</footer>
+
+</body>
+</html>
+
