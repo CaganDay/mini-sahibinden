@@ -63,7 +63,15 @@ public class HomeController {
                        @RequestParam(name = "roomConfig", required = false) String roomConfig,
                        @RequestParam(name = "vehiclePage", defaultValue = "0") int vehiclePage,
                        @RequestParam(name = "realestatePage", defaultValue = "0") int realestatePage,
-                       @RequestParam(name = "tab", required = false) String tab) {
+                       @RequestParam(name = "tab", required = false) String tab,
+                       // Vehicle filter parameters
+                       @RequestParam(name = "minYear", required = false) Integer minYear,
+                       @RequestParam(name = "maxYear", required = false) Integer maxYear,
+                       @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+                       @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+                       @RequestParam(name = "minKm", required = false) Integer minKm,
+                       @RequestParam(name = "maxKm", required = false) Integer maxKm,
+                       @RequestParam(name = "modelName", required = false) String modelName) {
 
         Pageable vehiclePageable = PageRequest.of(vehiclePage, PAGE_SIZE);
         Pageable realestatePageable = PageRequest.of(realestatePage, PAGE_SIZE);
@@ -72,13 +80,39 @@ public class HomeController {
         List<Integer> years = vehicleRepository.getDistinctYears();
         Page<Vehicle> vehiclesPage;
 
-        if (keyword != null && !keyword.isEmpty() && !"realestate".equals(tab)) {
+        // Check if any advanced filter is applied
+        boolean hasAdvancedFilter = minYear != null || maxYear != null || 
+                                    minPrice != null || maxPrice != null || 
+                                    minKm != null || maxKm != null ||
+                                    (modelName != null && !modelName.isEmpty());
+
+        if (hasAdvancedFilter) {
+            // Use advanced filter with all parameters
+            vehiclesPage = vehicleRepository.filterVehiclesPaged(
+                    minYear, maxYear, minPrice, maxPrice, minKm, maxKm, modelName, vehiclePageable);
+        } else if (keyword != null && !keyword.isEmpty() && !"realestate".equals(tab)) {
             vehiclesPage = vehicleRepository.searchByModelNamePaged(keyword, vehiclePageable);
         } else if (year != null) {
             vehiclesPage = vehicleRepository.filterByYearPaged(year, vehiclePageable);
         } else {
             vehiclesPage = vehicleRepository.findAllActivePaged(vehiclePageable);
         }
+
+        // Get filter ranges for the UI
+        Object[] filterRanges = vehicleRepository.getFilterRanges();
+        if (filterRanges != null && filterRanges.length > 0) {
+            Object[] ranges = (Object[]) filterRanges[0];
+            model.addAttribute("yearMin", ranges[0]);
+            model.addAttribute("yearMax", ranges[1]);
+            model.addAttribute("priceMin", ranges[2]);
+            model.addAttribute("priceMax", ranges[3]);
+            model.addAttribute("kmMin", ranges[4]);
+            model.addAttribute("kmMax", ranges[5]);
+        }
+
+        // Get distinct model names for filter
+        List<String> modelNames = vehicleRepository.getDistinctModelNames();
+        model.addAttribute("modelNames", modelNames);
 
         // RealEstate filters
         List<String> cities = TURKEY_CITIES;
@@ -110,6 +144,7 @@ public class HomeController {
         model.addAttribute("realEstates", realEstatesPage.getContent());
         model.addAttribute("realEstatesPage", realEstatesPage);
         model.addAttribute("activeTab", activeTab);
+        model.addAttribute("hasAdvancedFilter", hasAdvancedFilter);
 
         return "home";
     }

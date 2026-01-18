@@ -158,4 +158,56 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
             "GROUP BY v.model_year " +
             "ORDER BY v.model_year DESC", nativeQuery = true)
     List<Object[]> getYearStatistics();
+
+    // =====================================================
+    // FILTER QUERIES WITH PAGINATION
+    // =====================================================
+
+    // Advanced filter with pagination - supports all filter combinations
+    @Query(value = "SELECT v FROM Vehicle v " +
+            "JOIN v.listing l " +
+            "JOIN l.user " +
+            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "AND (:minYear IS NULL OR v.modelYear >= :minYear) " +
+            "AND (:maxYear IS NULL OR v.modelYear <= :maxYear) " +
+            "AND (:minPrice IS NULL OR l.price >= :minPrice) " +
+            "AND (:maxPrice IS NULL OR l.price <= :maxPrice) " +
+            "AND (:minKm IS NULL OR v.kilometers >= :minKm) " +
+            "AND (:maxKm IS NULL OR v.kilometers <= :maxKm) " +
+            "AND (:modelName IS NULL OR :modelName = '' OR LOWER(v.modelName) LIKE LOWER(CONCAT('%', :modelName, '%'))) " +
+            "ORDER BY l.listingDate DESC",
+            countQuery = "SELECT COUNT(v) FROM Vehicle v JOIN v.listing l " +
+                    "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+                    "AND (:minYear IS NULL OR v.modelYear >= :minYear) " +
+                    "AND (:maxYear IS NULL OR v.modelYear <= :maxYear) " +
+                    "AND (:minPrice IS NULL OR l.price >= :minPrice) " +
+                    "AND (:maxPrice IS NULL OR l.price <= :maxPrice) " +
+                    "AND (:minKm IS NULL OR v.kilometers >= :minKm) " +
+                    "AND (:maxKm IS NULL OR v.kilometers <= :maxKm) " +
+                    "AND (:modelName IS NULL OR :modelName = '' OR LOWER(v.modelName) LIKE LOWER(CONCAT('%', :modelName, '%')))")
+    Page<Vehicle> filterVehiclesPaged(
+            @Param("minYear") Integer minYear,
+            @Param("maxYear") Integer maxYear,
+            @Param("minPrice") java.math.BigDecimal minPrice,
+            @Param("maxPrice") java.math.BigDecimal maxPrice,
+            @Param("minKm") Integer minKm,
+            @Param("maxKm") Integer maxKm,
+            @Param("modelName") String modelName,
+            Pageable pageable);
+
+    // Get min and max values for filter ranges
+    @Query(value = "SELECT MIN(v.model_year), MAX(v.model_year), " +
+            "MIN(l.price), MAX(l.price), " +
+            "MIN(v.kilometers), MAX(v.kilometers) " +
+            "FROM Vehicles v " +
+            "INNER JOIN Listings l ON v.listing_id = l.listing_id " +
+            "WHERE l.status = 'Active'", nativeQuery = true)
+    Object[] getFilterRanges();
+
+    // Get distinct model names for autocomplete
+    @Query(value = "SELECT DISTINCT v.model_name FROM Vehicles v " +
+            "INNER JOIN Listings l ON v.listing_id = l.listing_id " +
+            "WHERE l.status = 'Active' " +
+            "ORDER BY v.model_name", nativeQuery = true)
+    List<String> getDistinctModelNames();
 }

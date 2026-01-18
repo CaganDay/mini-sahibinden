@@ -53,25 +53,111 @@
         <div th:class="${activeTab == 'vehicles'} ? 'tab-pane fade show active' : 'tab-pane fade'" id="vehicles-section" role="tabpanel">
             <div class="row">
                 <div class="col-md-3">
+                    <!-- Advanced Filter Panel -->
                     <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-white fw-bold">Model Years</div>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between align-items-center" th:each="y : ${years}">
-                                <a th:href="@{/(year=${y})}" class="text-decoration-none text-dark" th:text="${y}">Year</a>
-                                <span class="badge bg-secondary rounded-pill">></span>
-                            </li>
-                            <li class="list-group-item">
-                                <a href="/" class="text-decoration-none text-primary fw-bold">Show All</a>
+                        <div class="card-header bg-warning fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-filter"></i> Filter Vehicles</span>
+                            <a href="/" class="btn btn-sm btn-outline-dark" th:if="${hasAdvancedFilter}">Clear</a>
+                        </div>
+                        <div class="card-body">
+                            <form action="/" method="get" id="vehicleFilterForm">
+                                <input type="hidden" name="tab" value="vehicles">
+                                
+                                <!-- Model Name -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Model Name</label>
+                                    <input type="text" class="form-control form-control-sm" name="modelName" 
+                                           th:value="${param.modelName}" placeholder="e.g. BMW, Mercedes...">
+                                </div>
+                                
+                                <!-- Year Range -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Model Year</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <select class="form-select form-select-sm" name="minYear">
+                                                <option value="">Min</option>
+                                                <option th:each="y : ${years}" th:value="${y}" th:text="${y}"
+                                                        th:selected="${param.minYear != null && param.minYear[0] == #strings.toString(y)}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <select class="form-select form-select-sm" name="maxYear">
+                                                <option value="">Max</option>
+                                                <option th:each="y : ${years}" th:value="${y}" th:text="${y}"
+                                                        th:selected="${param.maxYear != null && param.maxYear[0] == #strings.toString(y)}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Price Range -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Price (TL)</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="minPrice" 
+                                                   th:value="${param.minPrice}" placeholder="Min" min="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="maxPrice" 
+                                                   th:value="${param.maxPrice}" placeholder="Max" min="0">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted" th:if="${priceMin != null}">
+                                        Range: <span th:text="${#numbers.formatDecimal(priceMin, 0, 'COMMA', 0, 'POINT')}">0</span> - 
+                                        <span th:text="${#numbers.formatDecimal(priceMax, 0, 'COMMA', 0, 'POINT')}">0</span> TL
+                                    </small>
+                                </div>
+                                
+                                <!-- Kilometers Range -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Kilometers</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="minKm" 
+                                                   th:value="${param.minKm}" placeholder="Min" min="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="maxKm" 
+                                                   th:value="${param.maxKm}" placeholder="Max" min="0">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted" th:if="${kmMin != null}">
+                                        Range: <span th:text="${#numbers.formatDecimal(kmMin, 0, 'COMMA', 0, 'POINT')}">0</span> - 
+                                        <span th:text="${#numbers.formatDecimal(kmMax, 0, 'COMMA', 0, 'POINT')}">0</span> km
+                                    </small>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-warning w-100 fw-bold">
+                                    <i class="fa-solid fa-search"></i> Apply Filters
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Year Links -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white fw-bold">Quick Filter by Year</div>
+                        <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-1" th:each="y : ${years}">
+                                <a th:href="@{/(year=${y})}" class="text-decoration-none text-dark small" th:text="${y}">Year</a>
+                                <span class="badge bg-secondary rounded-pill" style="font-size: 0.7rem;">></span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="col-md-9">
-                    <h4 class="mb-3"><i class="fa-solid fa-car"></i> Available Vehicles</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0"><i class="fa-solid fa-car"></i> Available Vehicles</h4>
+                        <span class="badge bg-secondary" th:if="${hasAdvancedFilter}">
+                            <i class="fa-solid fa-filter"></i> Filters applied
+                        </span>
+                    </div>
                     
                     <div th:if="${#lists.isEmpty(vehicles)}" class="alert alert-info">
-                        No vehicles found in the database.
+                        No vehicles found matching your criteria. <a href="/">Clear filters</a>
                     </div>
 
                     <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -101,31 +187,31 @@
                     <nav th:if="${vehiclesPage.totalPages > 1}" class="mt-4" aria-label="Vehicle page navigation">
                         <ul class="pagination justify-content-center">
                             <li class="page-item" th:classappend="${vehiclesPage.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number - 1}, keyword=${param.keyword}, year=${param.year})}">«</a>
+                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number - 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">«</a>
                             </li>
                             <li class="page-item" th:if="${vehiclesPage.number > 0}">
-                                <a class="page-link" th:href="@{/(vehiclePage=0, keyword=${param.keyword}, year=${param.year})}">1</a>
+                                <a class="page-link" th:href="@{/(vehiclePage=0, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">1</a>
                             </li>
                             <li class="page-item disabled" th:if="${vehiclesPage.number > 2}">
                                 <span class="page-link">...</span>
                             </li>
                             <li class="page-item" th:if="${vehiclesPage.number > 1}">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number - 1}, keyword=${param.keyword}, year=${param.year})}" th:text="${vehiclesPage.number}"></a>
+                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number - 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}" th:text="${vehiclesPage.number}"></a>
                             </li>
                             <li class="page-item active">
                                 <span class="page-link" th:text="${vehiclesPage.number + 1}"></span>
                             </li>
                             <li class="page-item" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 2}">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number + 1}, keyword=${param.keyword}, year=${param.year})}" th:text="${vehiclesPage.number + 2}"></a>
+                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number + 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}" th:text="${vehiclesPage.number + 2}"></a>
                             </li>
                             <li class="page-item disabled" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 3}">
                                 <span class="page-link">...</span>
                             </li>
                             <li class="page-item" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 1}">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.totalPages - 1}, keyword=${param.keyword}, year=${param.year})}" th:text="${vehiclesPage.totalPages}"></a>
+                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.totalPages - 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}" th:text="${vehiclesPage.totalPages}"></a>
                             </li>
                             <li class="page-item" th:classappend="${vehiclesPage.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number + 1}, keyword=${param.keyword}, year=${param.year})}">»</a>
+                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number + 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">»</a>
                             </li>
                         </ul>
                         <p class="text-center text-muted small">
