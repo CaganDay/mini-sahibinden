@@ -5,6 +5,9 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,17 +16,25 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.minisahibinden.entity.Car;
-import com.minisahibinden.entity.House;
-import com.minisahibinden.repository.CarRepository;
-import com.minisahibinden.repository.HouseRepository;
+import com.minisahibinden.entity.Listing;
+import com.minisahibinden.entity.RealEstate;
+import com.minisahibinden.entity.User;
+import com.minisahibinden.entity.Vehicle;
+import com.minisahibinden.repository.ListingRepository;
+import com.minisahibinden.repository.RealEstateRepository;
+import com.minisahibinden.repository.UserRepository;
+import com.minisahibinden.repository.VehicleRepository;
 
 @Controller
 public class HomeController {
 
-    private final CarRepository carRepository;
-    private final HouseRepository houseRepository;
-    
+    private static final int PAGE_SIZE = 12; // Show 12 items per page for better performance
+
+    private final VehicleRepository vehicleRepository;
+    private final RealEstateRepository realEstateRepository;
+    private final ListingRepository listingRepository;
+    private final UserRepository userRepository;
+
     // All 81 cities of Turkey
     private static final List<String> TURKEY_CITIES = Arrays.asList(
         "Adana", "Adiyaman", "Afyonkarahisar", "Agri", "Aksaray", "Amasya", "Ankara", "Antalya", "Ardahan", "Artvin",
@@ -36,74 +47,84 @@ public class HomeController {
         "Sirnak", "Sivas", "Tekirdag", "Tokat", "Trabzon", "Tunceli", "Usak", "Van", "Yalova", "Yozgat", "Zonguldak"
     );
 
-    public HomeController(CarRepository carRepository, HouseRepository houseRepository) {
-        this.carRepository = carRepository;
-        this.houseRepository = houseRepository;
+    public HomeController(VehicleRepository vehicleRepository, RealEstateRepository realEstateRepository,
+                         ListingRepository listingRepository, UserRepository userRepository) {
+        this.vehicleRepository = vehicleRepository;
+        this.realEstateRepository = realEstateRepository;
+        this.listingRepository = listingRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/")
-    public String home(Model model, 
+    public String home(Model model,
                        @RequestParam(name = "keyword", required = false) String keyword,
                        @RequestParam(name = "year", required = false) Integer year,
                        @RequestParam(name = "city", required = false) String city,
-                       @RequestParam(name = "roomCount", required = false) String roomCount) {
-        
-        // Car filters
-        List<Integer> years = carRepository.getDistinctYears();
-        List<Car> cars;
+                       @RequestParam(name = "roomConfig", required = false) String roomConfig,
+                       @RequestParam(name = "vehiclePage", defaultValue = "0") int vehiclePage,
+                       @RequestParam(name = "realestatePage", defaultValue = "0") int realestatePage) {
+
+        Pageable vehiclePageable = PageRequest.of(vehiclePage, PAGE_SIZE);
+        Pageable realestatePageable = PageRequest.of(realestatePage, PAGE_SIZE);
+
+        // Vehicle filters
+        List<Integer> years = vehicleRepository.getDistinctYears();
+        Page<Vehicle> vehiclesPage;
 
         if (keyword != null && !keyword.isEmpty()) {
-            cars = carRepository.searchCarsSQL(keyword);
+            vehiclesPage = vehicleRepository.searchByModelNamePaged(keyword, vehiclePageable);
         } else if (year != null) {
-            cars = carRepository.filterByYearSQL(year);
+            vehiclesPage = vehicleRepository.filterByYearPaged(year, vehiclePageable);
         } else {
-            cars = carRepository.findAll();
+            vehiclesPage = vehicleRepository.findAllActivePaged(vehiclePageable);
         }
 
-        // House filters
+        // RealEstate filters
         List<String> cities = TURKEY_CITIES;
-        List<String> roomCounts = houseRepository.getDistinctRoomCounts();
-        List<House> houses;
+        List<String> roomConfigs = realEstateRepository.getDistinctRoomConfigs();
+        Page<RealEstate> realEstatesPage;
 
         if (city != null && !city.isEmpty()) {
-            houses = houseRepository.findByCity(city);
-        } else if (roomCount != null && !roomCount.isEmpty()) {
-            houses = houseRepository.findByRoomCount(roomCount);
+            realEstatesPage = realEstateRepository.findByCityPaged(city, realestatePageable);
+        } else if (roomConfig != null && !roomConfig.isEmpty()) {
+            realEstatesPage = realEstateRepository.findByRoomConfigPaged(roomConfig, realestatePageable);
         } else {
-            houses = houseRepository.findAll();
+            realEstatesPage = realEstateRepository.findAllActivePaged(realestatePageable);
         }
 
-        // Determine which tab should be active
-        String activeTab = "cars";
-        if (city != null || roomCount != null) {
-            activeTab = "houses";
+        // Determine active tab
+        String activeTab = "vehicles";
+        if (city != null || roomConfig != null) {
+            activeTab = "realestate";
         }
 
         // Add to model
         model.addAttribute("years", years);
-        model.addAttribute("cars", cars);
+        model.addAttribute("vehicles", vehiclesPage.getContent());
+        model.addAttribute("vehiclesPage", vehiclesPage);
         model.addAttribute("cities", cities);
-        model.addAttribute("roomCounts", roomCounts);
-        model.addAttribute("houses", houses);
+        model.addAttribute("roomConfigs", roomConfigs);
+        model.addAttribute("realEstates", realEstatesPage.getContent());
+        model.addAttribute("realEstatesPage", realEstatesPage);
         model.addAttribute("activeTab", activeTab);
-        
+
         return "home";
     }
 
-    @GetMapping("/car/{id}")
-    public String carDetail(@PathVariable Long id, Model model) {
-        Car car = carRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid car Id:" + id));
-        model.addAttribute("car", car);
-        return "car-detail";
+    @GetMapping("/vehicle/{id}")
+    public String vehicleDetail(@PathVariable Integer id, Model model) {
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid vehicle Id:" + id));
+        model.addAttribute("vehicle", vehicle);
+        return "vehicle-detail";
     }
 
-    @GetMapping("/house/{id}")
-    public String houseDetail(@PathVariable Long id, Model model) {
-        House house = houseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid house Id:" + id));
-        model.addAttribute("house", house);
-        return "house-detail";
+    @GetMapping("/realestate/{id}")
+    public String realEstateDetail(@PathVariable Integer id, Model model) {
+        RealEstate realEstate = realEstateRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid real estate Id:" + id));
+        model.addAttribute("realEstate", realEstate);
+        return "realestate-detail";
     }
 
     @GetMapping("/post")
@@ -112,31 +133,57 @@ public class HomeController {
         return "post-ad";
     }
 
-    @PostMapping("/post/car")
-    public String postCar(@RequestParam String model,
-                          @RequestParam Integer modelYear,
-                          @RequestParam BigDecimal price,
-                          @RequestParam Integer kilometers,
-                          RedirectAttributes redirectAttributes) {
-        Car car = new Car(modelYear, model, price, kilometers);
-        carRepository.save(car);
-        redirectAttributes.addFlashAttribute("success", "Car ad posted successfully!");
+    @PostMapping("/post/vehicle")
+    public String postVehicle(@RequestParam String modelName,
+                              @RequestParam Integer modelYear,
+                              @RequestParam BigDecimal price,
+                              @RequestParam Integer kilometers,
+                              RedirectAttributes redirectAttributes) {
+        // Get or create a default user
+        User user = userRepository.findById(1)
+                .orElseGet(() -> {
+                    User newUser = new User("Default User", "default@example.com", "555-0000");
+                    return userRepository.save(newUser);
+                });
+
+        // Create listing
+        Listing listing = new Listing(user, price, LocalDate.now(), Listing.Category.Vehicle);
+        listing = listingRepository.save(listing);
+
+        // Create vehicle
+        Vehicle vehicle = new Vehicle(listing, modelYear, modelName, kilometers);
+        vehicleRepository.save(vehicle);
+
+        redirectAttributes.addFlashAttribute("success", "Vehicle ad posted successfully!");
         return "redirect:/post";
     }
 
-    @PostMapping("/post/house")
-    public String postHouse(@RequestParam String city,
-                            @RequestParam String district,
-                            @RequestParam(required = false) String neighborhood,
-                            @RequestParam Double squareMeters,
-                            @RequestParam String roomCount,
-                            @RequestParam BigDecimal price,
-                            @RequestParam String sellerType,
-                            RedirectAttributes redirectAttributes) {
-        House house = new House(sellerType, squareMeters, roomCount, city, district, 
-                               neighborhood != null ? neighborhood : "Unknown", LocalDate.now(), price);
-        houseRepository.save(house);
-        redirectAttributes.addFlashAttribute("success", "House ad posted successfully!");
+    @PostMapping("/post/realestate")
+    public String postRealEstate(@RequestParam String city,
+                                 @RequestParam String district,
+                                 @RequestParam(required = false) String neighborhood,
+                                 @RequestParam Integer areaSqm,
+                                 @RequestParam String roomConfig,
+                                 @RequestParam BigDecimal price,
+                                 @RequestParam String sellerType,
+                                 RedirectAttributes redirectAttributes) {
+        // Get or create a default user
+        User user = userRepository.findById(1)
+                .orElseGet(() -> {
+                    User newUser = new User("Default User", "default@example.com", "555-0000");
+                    return userRepository.save(newUser);
+                });
+
+        // Create listing
+        Listing listing = new Listing(user, price, LocalDate.now(), Listing.Category.RealEstate);
+        listing = listingRepository.save(listing);
+
+        // Create real estate
+        RealEstate realEstate = new RealEstate(listing, sellerType, areaSqm, roomConfig,
+                city, district, neighborhood != null ? neighborhood : "Unknown");
+        realEstateRepository.save(realEstate);
+
+        redirectAttributes.addFlashAttribute("success", "Real estate ad posted successfully!");
         return "redirect:/post";
     }
 }

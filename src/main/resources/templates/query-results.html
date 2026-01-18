@@ -5,7 +5,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .car-card:hover { transform: translateY(-5px); transition: 0.3s; cursor: pointer; }
+        .vehicle-card:hover { transform: translateY(-5px); transition: 0.3s; cursor: pointer; }
         .query-info { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
     </style>
 </head>
@@ -35,7 +35,7 @@
             <p class="card-text mb-2" th:text="${queryDescription}">Query Description</p>
             <div class="d-flex align-items-center">
                 <span class="badge bg-light text-dark me-2">
-                    <i class="fa-solid fa-car"></i> Results: <span th:text="${#lists.size(cars)}">0</span>
+                    <i class="fa-solid fa-car"></i> Results: <span th:text="${#lists.size(vehicles)}">0</span>
                 </span>
                 <a th:href="@{/queries}" class="btn btn-light btn-sm">
                     <i class="fa-solid fa-redo"></i> Try Another Query
@@ -45,38 +45,38 @@
     </div>
 
     <!-- Results -->
-    <div th:if="${#lists.isEmpty(cars)}" class="alert alert-warning">
-        <i class="fa-solid fa-exclamation-triangle"></i> No cars found matching your criteria.
+    <div th:if="${#lists.isEmpty(vehicles)}" class="alert alert-warning">
+        <i class="fa-solid fa-exclamation-triangle"></i> No vehicles found matching your criteria.
     </div>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4" th:if="${!#lists.isEmpty(cars)}">
-        <div class="col" th:each="car : ${cars}">
-            <div class="card h-100 shadow-sm car-card">
+    <div class="row row-cols-1 row-cols-md-3 g-4" th:if="${!#lists.isEmpty(vehicles)}">
+        <div class="col" th:each="vehicle : ${vehicles}">
+            <div class="card h-100 shadow-sm vehicle-card">
                 <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;">
                     <i class="fa-solid fa-car fa-3x"></i>
                 </div>
                 
                 <div class="card-body">
-                    <h5 class="card-title text-truncate" th:text="${car.modelYear + ' ' + car.model}">Car Model</h5>
+                    <h5 class="card-title text-truncate" th:text="${vehicle.modelYear + ' ' + vehicle.modelName}">Vehicle Model</h5>
                     <p class="card-text text-primary fw-bold mb-1" 
-                       th:text="${#numbers.formatDecimal(car.price, 0, 'COMMA', 0, 'POINT')} + ' TL'">
+                       th:text="${#numbers.formatDecimal(vehicle.listing.price, 0, 'COMMA', 0, 'POINT')} + ' TL'">
                         0 TL
                     </p>
                     
                     <small class="text-muted d-block mb-1">
                         <i class="fa-solid fa-road"></i> 
-                        <span th:text="${#numbers.formatDecimal(car.kilometers, 0, 'COMMA', 0, 'POINT')} + ' km'">0 km</span>
+                        <span th:text="${#numbers.formatDecimal(vehicle.kilometers, 0, 'COMMA', 0, 'POINT')} + ' km'">0 km</span>
                     </small>
                     
                     <small class="text-muted d-block">
                         <i class="fa-solid fa-user"></i> 
-                        <span th:if="${car.user != null}" th:text="${car.user.firstName + ' ' + car.user.lastName}">Seller</span>
-                        <span th:if="${car.user == null}">Unknown Seller</span>
+                        <span th:if="${vehicle.listing.user != null}" th:text="${vehicle.listing.user.fullName}">Seller</span>
+                        <span th:if="${vehicle.listing.user == null}">Unknown Seller</span>
                     </small>
                 </div>
                 <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center">
-                    <small class="text-muted" th:text="'Year: ' + ${car.modelYear}">Year</small>
-                    <a th:href="@{/car/{id}(id=${car.id})}" class="btn btn-sm btn-outline-primary">
+                    <small class="text-muted" th:text="'Year: ' + ${vehicle.modelYear}">Year</small>
+                    <a th:href="@{/vehicle/{id}(id=${vehicle.listingId})}" class="btn btn-sm btn-outline-primary">
                         View <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 </div>
@@ -85,14 +85,14 @@
     </div>
 
     <!-- Query Parameters Display (if any) -->
-    <div class="card shadow-sm mt-4" th:if="${minCarCount != null || topN != null || minPrice != null}">
+    <div class="card shadow-sm mt-4" th:if="${minListingCount != null || topN != null || minPrice != null}">
         <div class="card-header bg-light">
             <h6 class="mb-0"><i class="fa-solid fa-cog"></i> Query Parameters</h6>
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-3" th:if="${minCarCount != null}">
-                    <strong>Min Car Count:</strong> <span th:text="${minCarCount}"></span>
+                <div class="col-md-3" th:if="${minListingCount != null}">
+                    <strong>Min Listing Count:</strong> <span th:text="${minListingCount}"></span>
                 </div>
                 <div class="col-md-3" th:if="${topN != null}">
                     <strong>Top N:</strong> <span th:text="${topN}"></span>

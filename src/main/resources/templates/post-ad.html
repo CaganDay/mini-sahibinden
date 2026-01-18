@@ -35,85 +35,85 @@
                     <!-- Category Tabs -->
                     <ul class="nav nav-pills mb-4" id="adTypeTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="car-tab" data-bs-toggle="pill" data-bs-target="#car-form" type="button" role="tab">
-                                <i class="fa-solid fa-car"></i> Post a Car
+                            <button class="nav-link active" id="vehicle-tab" data-bs-toggle="pill" data-bs-target="#vehicle-form" type="button" role="tab">
+                                <i class="fa-solid fa-car"></i> Post a Vehicle
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="house-tab" data-bs-toggle="pill" data-bs-target="#house-form" type="button" role="tab">
-                                <i class="fa-solid fa-house"></i> Post a House
+                            <button class="nav-link" id="realestate-tab" data-bs-toggle="pill" data-bs-target="#realestate-form" type="button" role="tab">
+                                <i class="fa-solid fa-house"></i> Post Real Estate
                             </button>
                         </li>
                     </ul>
 
                     <div class="tab-content" id="adTypeTabsContent">
-                        <!-- CAR FORM -->
-                        <div class="tab-pane fade show active" id="car-form" role="tabpanel">
-                            <form th:action="@{/post/car}" method="post">
+                        <!-- VEHICLE FORM -->
+                        <div class="tab-pane fade show active" id="vehicle-form" role="tabpanel">
+                            <form th:action="@{/post/vehicle}" method="post">
                                 <div class="mb-3">
-                                    <label for="carModel" class="form-label">Car Model *</label>
-                                    <input type="text" class="form-control" id="carModel" name="model" 
+                                    <label for="vehicleModel" class="form-label">Vehicle Model *</label>
+                                    <input type="text" class="form-control" id="vehicleModel" name="modelName" 
                                            placeholder="e.g., BMW 320i, Mercedes C200" required>
                                 </div>
                                 
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
-                                        <label for="carYear" class="form-label">Model Year *</label>
-                                        <input type="number" class="form-control" id="carYear" name="modelYear" 
+                                        <label for="vehicleYear" class="form-label">Model Year *</label>
+                                        <input type="number" class="form-control" id="vehicleYear" name="modelYear" 
                                                min="1990" max="2026" placeholder="2020" required>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label for="carPrice" class="form-label">Price (TL) *</label>
-                                        <input type="number" class="form-control" id="carPrice" name="price" 
+                                        <label for="vehiclePrice" class="form-label">Price (TL) *</label>
+                                        <input type="number" class="form-control" id="vehiclePrice" name="price" 
                                                min="0" placeholder="500000" required>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label for="carKm" class="form-label">Kilometers *</label>
-                                        <input type="number" class="form-control" id="carKm" name="kilometers" 
+                                        <label for="vehicleKm" class="form-label">Kilometers *</label>
+                                        <input type="number" class="form-control" id="vehicleKm" name="kilometers" 
                                                min="0" placeholder="50000" required>
                                     </div>
                                 </div>
                                 
                                 <hr>
                                 <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fa-solid fa-paper-plane"></i> Post Car Ad
+                                    <i class="fa-solid fa-paper-plane"></i> Post Vehicle Ad
                                 </button>
                             </form>
                         </div>
 
-                        <!-- HOUSE FORM -->
-                        <div class="tab-pane fade" id="house-form" role="tabpanel">
-                            <form th:action="@{/post/house}" method="post">
+                        <!-- REAL ESTATE FORM -->
+                        <div class="tab-pane fade" id="realestate-form" role="tabpanel">
+                            <form th:action="@{/post/realestate}" method="post">
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="houseCity" class="form-label">City *</label>
-                                        <select class="form-select" id="houseCity" name="city" required>
+                                        <label for="reCity" class="form-label">City *</label>
+                                        <select class="form-select" id="reCity" name="city" required>
                                             <option value="">Select a city...</option>
                                             <option th:each="c : ${cities}" th:value="${c}" th:text="${c}">City</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="houseDistrict" class="form-label">District *</label>
-                                        <input type="text" class="form-control" id="houseDistrict" name="district" 
+                                        <label for="reDistrict" class="form-label">District *</label>
+                                        <input type="text" class="form-control" id="reDistrict" name="district" 
                                                placeholder="e.g., Kadikoy, Besiktas" required>
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="houseNeighborhood" class="form-label">Neighborhood</label>
-                                    <input type="text" class="form-control" id="houseNeighborhood" name="neighborhood" 
+                                    <label for="reNeighborhood" class="form-label">Neighborhood</label>
+                                    <input type="text" class="form-control" id="reNeighborhood" name="neighborhood" 
                                            placeholder="e.g., Moda, Etiler">
                                 </div>
                                 
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
-                                        <label for="houseSqm" class="form-label">Square Meters *</label>
-                                        <input type="number" class="form-control" id="houseSqm" name="squareMeters" 
+                                        <label for="reArea" class="form-label">Area (m²) *</label>
+                                        <input type="number" class="form-control" id="reArea" name="areaSqm" 
                                                min="10" max="1000" placeholder="120" required>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label for="houseRooms" class="form-label">Room Count *</label>
-                                        <select class="form-select" id="houseRooms" name="roomCount" required>
+                                        <label for="reRooms" class="form-label">Room Config *</label>
+                                        <select class="form-select" id="reRooms" name="roomConfig" required>
                                             <option value="">Select...</option>
                                             <option value="1+0">1+0 (Studio)</option>
                                             <option value="1+1">1+1</option>
@@ -125,8 +125,8 @@
                                         </select>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label for="housePrice" class="form-label">Price (TL) *</label>
-                                        <input type="number" class="form-control" id="housePrice" name="price" 
+                                        <label for="rePrice" class="form-label">Price (TL) *</label>
+                                        <input type="number" class="form-control" id="rePrice" name="price" 
                                                min="0" placeholder="2500000" required>
                                     </div>
                                 </div>
@@ -141,7 +141,7 @@
                                 
                                 <hr>
                                 <button type="submit" class="btn btn-success w-100">
-                                    <i class="fa-solid fa-paper-plane"></i> Post House Ad
+                                    <i class="fa-solid fa-paper-plane"></i> Post Real Estate Ad
                                 </button>
                             </form>
                         </div>

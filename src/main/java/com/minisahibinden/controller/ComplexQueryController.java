@@ -9,64 +9,64 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.minisahibinden.entity.Car;
-import com.minisahibinden.repository.CarRepository;
+import com.minisahibinden.entity.Vehicle;
+import com.minisahibinden.repository.VehicleRepository;
 
 @Controller
 @RequestMapping("/queries")
 public class ComplexQueryController {
 
-    private final CarRepository carRepository;
+    private final VehicleRepository vehicleRepository;
 
-    public ComplexQueryController(CarRepository carRepository) {
-        this.carRepository = carRepository;
+    public ComplexQueryController(VehicleRepository vehicleRepository) {
+        this.vehicleRepository = vehicleRepository;
     }
 
     @GetMapping("")
     public String queriesHome(Model model) {
-        List<Integer> years = carRepository.getDistinctYears();
+        List<Integer> years = vehicleRepository.getDistinctYears();
         model.addAttribute("years", years);
         return "queries";
     }
 
     // ---------------------------------------------------------
-    // COMPLEX QUERY 1: Cars from Active Users
+    // COMPLEX QUERY 1: Vehicles from Active Users
     // ---------------------------------------------------------
     @GetMapping("/active-users")
-    public String findCarsFromActiveUsers(
-            @RequestParam(name = "minCarCount", defaultValue = "2") int minCarCount,
+    public String findVehiclesFromActiveUsers(
+            @RequestParam(name = "minListingCount", defaultValue = "2") int minListingCount,
             Model model) {
         
-        List<Car> cars = carRepository.findCarsFromActiveUsersSQL(minCarCount);
-        model.addAttribute("cars", cars);
-        model.addAttribute("queryName", "Cars from Active Sellers");
+        List<Vehicle> vehicles = vehicleRepository.findVehiclesFromActiveUsersSQL(minListingCount);
+        model.addAttribute("vehicles", vehicles);
+        model.addAttribute("queryName", "Vehicles from Active Sellers");
         model.addAttribute("queryDescription", 
-            "Shows cars from sellers who have posted at least " + minCarCount + " cars");
-        model.addAttribute("minCarCount", minCarCount);
+            "Shows vehicles from sellers who have posted at least " + minListingCount + " listings");
+        model.addAttribute("minListingCount", minListingCount);
         
         return "query-results";
     }
 
     // ---------------------------------------------------------
-    // COMPLEX QUERY 2: Cars Above Average Price
+    // COMPLEX QUERY 2: Vehicles Above Average Price
     // ---------------------------------------------------------
     @GetMapping("/above-average")
-    public String findCarsAboveAveragePrice(Model model) {
+    public String findVehiclesAboveAveragePrice(Model model) {
         
-        List<Car> cars = carRepository.findCarsAboveAveragePriceSQL();
-        model.addAttribute("cars", cars);
-        model.addAttribute("queryName", "Cars Above Average Price");
+        List<Vehicle> vehicles = vehicleRepository.findVehiclesAboveAveragePriceSQL();
+        model.addAttribute("vehicles", vehicles);
+        model.addAttribute("queryName", "Vehicles Above Average Price");
         model.addAttribute("queryDescription", 
-            "Shows cars where the price is above the overall average price");
+            "Shows vehicles where the price is above the overall average price");
         
         return "query-results";
     }
 
     // ---------------------------------------------------------
-    // COMPLEX QUERY 3: Cars by Price and User
+    // COMPLEX QUERY 3: Vehicles by Price and User
     // ---------------------------------------------------------
     @GetMapping("/price-user-filter")
-    public String findCarsByPriceAndUser(
+    public String findVehiclesByPriceAndUser(
             @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
             @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
             @RequestParam(name = "userNamePattern", required = false) String userNamePattern,
@@ -77,12 +77,12 @@ public class ComplexQueryController {
         if (maxPrice == null) maxPrice = new BigDecimal("10000000");
         if (userNamePattern == null || userNamePattern.isEmpty()) userNamePattern = "";
         
-        List<Car> cars = carRepository.findCarsByPriceAndUserSQL(minPrice, maxPrice, userNamePattern);
+        List<Vehicle> vehicles = vehicleRepository.findVehiclesByPriceAndUserSQL(minPrice, maxPrice, userNamePattern);
         
-        model.addAttribute("cars", cars);
-        model.addAttribute("queryName", "Cars by Price Range and Seller");
+        model.addAttribute("vehicles", vehicles);
+        model.addAttribute("queryName", "Vehicles by Price Range and Seller");
         model.addAttribute("queryDescription", 
-            "Shows cars within price range, posted by sellers matching name pattern");
+            "Shows vehicles within price range, posted by sellers matching name pattern");
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
         model.addAttribute("userNamePattern", userNamePattern);
@@ -91,18 +91,18 @@ public class ComplexQueryController {
     }
 
     // ---------------------------------------------------------
-    // COMPLEX QUERY 4: Top Cars Per Year
+    // COMPLEX QUERY 4: Top Vehicles Per Year
     // ---------------------------------------------------------
     @GetMapping("/top-per-year")
-    public String findTopCarsPerYear(
+    public String findTopVehiclesPerYear(
             @RequestParam(name = "topN", defaultValue = "3") int topN,
             Model model) {
         
-        List<Car> cars = carRepository.findTopCarsPerYearSQL(topN);
-        model.addAttribute("cars", cars);
-        model.addAttribute("queryName", "Top " + topN + " Cars Per Year");
+        List<Vehicle> vehicles = vehicleRepository.findTopVehiclesPerYearSQL(topN);
+        model.addAttribute("vehicles", vehicles);
+        model.addAttribute("queryName", "Top " + topN + " Vehicles Per Year");
         model.addAttribute("queryDescription", 
-            "Shows the top " + topN + " cars per model year ranked by price");
+            "Shows the top " + topN + " vehicles per model year ranked by price");
         model.addAttribute("topN", topN);
         
         return "query-results";
@@ -112,7 +112,7 @@ public class ComplexQueryController {
     // COMPLEX QUERY 5: Complex Multi-Condition Filter
     // ---------------------------------------------------------
     @GetMapping("/complex-filter")
-    public String findCarsWithComplexFilter(
+    public String findVehiclesWithComplexFilter(
             @RequestParam(name = "minYear", required = false) Integer minYear,
             @RequestParam(name = "maxYear", required = false) Integer maxYear,
             @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
@@ -127,12 +127,12 @@ public class ComplexQueryController {
         if (maxPrice == null) maxPrice = new BigDecimal("10000000");
         if (keyword == null) keyword = "";
         
-        List<Car> cars = carRepository.findCarsWithComplexFilterSQL(
+        List<Vehicle> vehicles = vehicleRepository.findVehiclesWithComplexFilterSQL(
             minYear, maxYear, minPrice, maxPrice, maxKilometers, keyword, sortBy);
         
-        List<Integer> years = carRepository.getDistinctYears();
+        List<Integer> years = vehicleRepository.getDistinctYears();
         
-        model.addAttribute("cars", cars);
+        model.addAttribute("vehicles", vehicles);
         model.addAttribute("years", years);
         model.addAttribute("queryName", "Complex Multi-Condition Filter");
         model.addAttribute("queryDescription", 
