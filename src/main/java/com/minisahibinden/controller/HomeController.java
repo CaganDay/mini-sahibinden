@@ -71,7 +71,15 @@ public class HomeController {
                        @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
                        @RequestParam(name = "minKm", required = false) Integer minKm,
                        @RequestParam(name = "maxKm", required = false) Integer maxKm,
-                       @RequestParam(name = "modelName", required = false) String modelName) {
+                       @RequestParam(name = "modelName", required = false) String modelName,
+                       // Real Estate filter parameters
+                       @RequestParam(name = "filterCity", required = false) String filterCity,
+                       @RequestParam(name = "filterRoomConfig", required = false) String filterRoomConfig,
+                       @RequestParam(name = "filterSellerType", required = false) String filterSellerType,
+                       @RequestParam(name = "minPriceRe", required = false) BigDecimal minPriceRe,
+                       @RequestParam(name = "maxPriceRe", required = false) BigDecimal maxPriceRe,
+                       @RequestParam(name = "minArea", required = false) Integer minArea,
+                       @RequestParam(name = "maxArea", required = false) Integer maxArea) {
 
         Pageable vehiclePageable = PageRequest.of(vehiclePage, PAGE_SIZE);
         Pageable realestatePageable = PageRequest.of(realestatePage, PAGE_SIZE);
@@ -115,11 +123,24 @@ public class HomeController {
         model.addAttribute("modelNames", modelNames);
 
         // RealEstate filters
-        List<String> cities = TURKEY_CITIES;
+        List<String> cities = realEstateRepository.getDistinctCitiesFromDb();
         List<String> roomConfigs = realEstateRepository.getDistinctRoomConfigs();
+        List<String> sellerTypes = realEstateRepository.getDistinctSellerTypes();
         Page<RealEstate> realEstatesPage;
 
-        if (keyword != null && !keyword.isEmpty() && "realestate".equals(tab)) {
+        // Check if any real estate advanced filter is applied
+        boolean hasReAdvancedFilter = (filterCity != null && !filterCity.isEmpty()) ||
+                                      (filterRoomConfig != null && !filterRoomConfig.isEmpty()) ||
+                                      (filterSellerType != null && !filterSellerType.isEmpty()) ||
+                                      minPriceRe != null || maxPriceRe != null ||
+                                      minArea != null || maxArea != null;
+
+        if (hasReAdvancedFilter) {
+            // Use advanced filter with all parameters
+            realEstatesPage = realEstateRepository.filterRealEstatePaged(
+                    filterCity, filterRoomConfig, filterSellerType,
+                    minPriceRe, maxPriceRe, minArea, maxArea, realestatePageable);
+        } else if (keyword != null && !keyword.isEmpty() && "realestate".equals(tab)) {
             realEstatesPage = realEstateRepository.searchByLocationPaged(keyword, realestatePageable);
         } else if (city != null && !city.isEmpty()) {
             realEstatesPage = realEstateRepository.findByCityPaged(city, realestatePageable);
@@ -129,9 +150,19 @@ public class HomeController {
             realEstatesPage = realEstateRepository.findAllActivePaged(realestatePageable);
         }
 
+        // Get real estate filter ranges for the UI
+        Object[] reFilterRanges = realEstateRepository.getRealEstateFilterRanges();
+        if (reFilterRanges != null && reFilterRanges.length > 0) {
+            Object[] reRanges = (Object[]) reFilterRanges[0];
+            model.addAttribute("rePriceMin", reRanges[0]);
+            model.addAttribute("rePriceMax", reRanges[1]);
+            model.addAttribute("areaMin", reRanges[2]);
+            model.addAttribute("areaMax", reRanges[3]);
+        }
+
         // Determine active tab
         String activeTab = "vehicles";
-        if ("realestate".equals(tab) || city != null || roomConfig != null) {
+        if ("realestate".equals(tab) || city != null || roomConfig != null || hasReAdvancedFilter) {
             activeTab = "realestate";
         }
 
@@ -141,10 +172,12 @@ public class HomeController {
         model.addAttribute("vehiclesPage", vehiclesPage);
         model.addAttribute("cities", cities);
         model.addAttribute("roomConfigs", roomConfigs);
+        model.addAttribute("sellerTypes", sellerTypes);
         model.addAttribute("realEstates", realEstatesPage.getContent());
         model.addAttribute("realEstatesPage", realEstatesPage);
         model.addAttribute("activeTab", activeTab);
         model.addAttribute("hasAdvancedFilter", hasAdvancedFilter);
+        model.addAttribute("hasReAdvancedFilter", hasReAdvancedFilter);
 
         return "home";
     }
