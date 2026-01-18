@@ -16,25 +16,25 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
 
     // Get all vehicles with listing info (active only) - with pagination
     @Query(value = "SELECT v FROM Vehicle v " +
-            "JOIN FETCH v.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN v.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "ORDER BY l.listingDate DESC",
             countQuery = "SELECT COUNT(v) FROM Vehicle v JOIN v.listing l WHERE l.status = com.minisahibinden.entity.Listing$Status.Active")
     Page<Vehicle> findAllActivePaged(Pageable pageable);
 
-    // Get all vehicles with listing info (active only) - uses JOIN FETCH to avoid N+1
+    // Get all vehicles with listing info (active only)
     @Query("SELECT v FROM Vehicle v " +
-            "JOIN FETCH v.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN v.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "ORDER BY l.listingDate DESC")
     List<Vehicle> findAllActive();
 
     // Search vehicles by model name - with pagination
     @Query(value = "SELECT v FROM Vehicle v " +
-            "JOIN FETCH v.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN v.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "AND v.modelName LIKE %:keyword% " +
             "ORDER BY l.price DESC",
@@ -43,8 +43,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
 
     // Search vehicles by model name
     @Query("SELECT v FROM Vehicle v " +
-            "JOIN FETCH v.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN v.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "AND v.modelName LIKE %:keyword% " +
             "ORDER BY l.price DESC")
@@ -52,8 +52,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
 
     // Filter by year - with pagination
     @Query(value = "SELECT v FROM Vehicle v " +
-            "JOIN FETCH v.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN v.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "AND v.modelYear = :year " +
             "ORDER BY l.price DESC",
@@ -62,8 +62,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
 
     // Filter by year
     @Query("SELECT v FROM Vehicle v " +
-            "JOIN FETCH v.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN v.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "AND v.modelYear = :year " +
             "ORDER BY l.price DESC")

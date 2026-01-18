@@ -16,10 +16,11 @@
     <div class="container">
         <a class="navbar-brand fw-bold text-dark" href="/">mini<span class="bg-warning px-1 rounded border border-dark">sahibinden</span>.com</a>
         
-        <form class="d-flex w-50 mx-auto" th:action="@{/}" method="get">
-            <input class="form-control me-2" type="search" name="keyword" 
-                   placeholder="Search for vehicles or real estate..." aria-label="Search" 
-                   th:value="${param.keyword}">
+        <form class="d-flex w-50 mx-auto" th:action="@{/}" method="get" id="searchForm">
+            <input class="form-control me-2" type="search" name="keyword" id="searchInput"
+                   th:placeholder="${activeTab == 'realestate'} ? 'Search by city, district...' : 'Search vehicles by model name...'"
+                   aria-label="Search" th:value="${param.keyword}">
+            <input type="hidden" name="tab" id="tabInput" th:value="${activeTab}">
             <button class="btn btn-outline-dark" type="submit">Search</button>
         </form>
 
@@ -100,14 +101,31 @@
                     <nav th:if="${vehiclesPage.totalPages > 1}" class="mt-4" aria-label="Vehicle page navigation">
                         <ul class="pagination justify-content-center">
                             <li class="page-item" th:classappend="${vehiclesPage.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number - 1}, keyword=${param.keyword}, year=${param.year})}">Previous</a>
+                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number - 1}, keyword=${param.keyword}, year=${param.year})}">«</a>
                             </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(0, vehiclesPage.totalPages - 1)}"
-                                th:classappend="${i == vehiclesPage.number} ? 'active'">
-                                <a class="page-link" th:href="@{/(vehiclePage=${i}, keyword=${param.keyword}, year=${param.year})}" th:text="${i + 1}">1</a>
+                            <li class="page-item" th:if="${vehiclesPage.number > 0}">
+                                <a class="page-link" th:href="@{/(vehiclePage=0, keyword=${param.keyword}, year=${param.year})}">1</a>
+                            </li>
+                            <li class="page-item disabled" th:if="${vehiclesPage.number > 2}">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item" th:if="${vehiclesPage.number > 1}">
+                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number - 1}, keyword=${param.keyword}, year=${param.year})}" th:text="${vehiclesPage.number}"></a>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link" th:text="${vehiclesPage.number + 1}"></span>
+                            </li>
+                            <li class="page-item" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 2}">
+                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number + 1}, keyword=${param.keyword}, year=${param.year})}" th:text="${vehiclesPage.number + 2}"></a>
+                            </li>
+                            <li class="page-item disabled" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 3}">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 1}">
+                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.totalPages - 1}, keyword=${param.keyword}, year=${param.year})}" th:text="${vehiclesPage.totalPages}"></a>
                             </li>
                             <li class="page-item" th:classappend="${vehiclesPage.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number + 1}, keyword=${param.keyword}, year=${param.year})}">Next</a>
+                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number + 1}, keyword=${param.keyword}, year=${param.year})}">»</a>
                             </li>
                         </ul>
                         <p class="text-center text-muted small">
@@ -189,14 +207,31 @@
                     <nav th:if="${realEstatesPage.totalPages > 1}" class="mt-4" aria-label="Real Estate page navigation">
                         <ul class="pagination justify-content-center">
                             <li class="page-item" th:classappend="${realEstatesPage.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.number - 1}, city=${param.city}, roomConfig=${param.roomConfig})}">Previous</a>
+                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.number - 1}, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate')}">«</a>
                             </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(0, realEstatesPage.totalPages - 1)}"
-                                th:classappend="${i == realEstatesPage.number} ? 'active'">
-                                <a class="page-link" th:href="@{/(realestatePage=${i}, city=${param.city}, roomConfig=${param.roomConfig})}" th:text="${i + 1}">1</a>
+                            <li class="page-item" th:if="${realEstatesPage.number > 0}">
+                                <a class="page-link" th:href="@{/(realestatePage=0, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate')}">1</a>
+                            </li>
+                            <li class="page-item disabled" th:if="${realEstatesPage.number > 2}">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item" th:if="${realEstatesPage.number > 1}">
+                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.number - 1}, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate')}" th:text="${realEstatesPage.number}"></a>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link" th:text="${realEstatesPage.number + 1}"></span>
+                            </li>
+                            <li class="page-item" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 2}">
+                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.number + 1}, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate')}" th:text="${realEstatesPage.number + 2}"></a>
+                            </li>
+                            <li class="page-item disabled" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 3}">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 1}">
+                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.totalPages - 1}, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate')}" th:text="${realEstatesPage.totalPages}"></a>
                             </li>
                             <li class="page-item" th:classappend="${realEstatesPage.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.number + 1}, city=${param.city}, roomConfig=${param.roomConfig})}">Next</a>
+                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.number + 1}, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate')}">»</a>
                             </li>
                         </ul>
                         <p class="text-center text-muted small">
@@ -216,5 +251,16 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Update hidden tab input and placeholder when user clicks on tabs
+    document.getElementById('vehicles-tab').addEventListener('click', function() {
+        document.getElementById('tabInput').value = 'vehicles';
+        document.getElementById('searchInput').placeholder = 'Search vehicles by model name...';
+    });
+    document.getElementById('realestate-tab').addEventListener('click', function() {
+        document.getElementById('tabInput').value = 'realestate';
+        document.getElementById('searchInput').placeholder = 'Search by city, district...';
+    });
+</script>
 </body>
 </html>

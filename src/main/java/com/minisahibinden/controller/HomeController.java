@@ -62,7 +62,8 @@ public class HomeController {
                        @RequestParam(name = "city", required = false) String city,
                        @RequestParam(name = "roomConfig", required = false) String roomConfig,
                        @RequestParam(name = "vehiclePage", defaultValue = "0") int vehiclePage,
-                       @RequestParam(name = "realestatePage", defaultValue = "0") int realestatePage) {
+                       @RequestParam(name = "realestatePage", defaultValue = "0") int realestatePage,
+                       @RequestParam(name = "tab", required = false) String tab) {
 
         Pageable vehiclePageable = PageRequest.of(vehiclePage, PAGE_SIZE);
         Pageable realestatePageable = PageRequest.of(realestatePage, PAGE_SIZE);
@@ -71,7 +72,7 @@ public class HomeController {
         List<Integer> years = vehicleRepository.getDistinctYears();
         Page<Vehicle> vehiclesPage;
 
-        if (keyword != null && !keyword.isEmpty()) {
+        if (keyword != null && !keyword.isEmpty() && !"realestate".equals(tab)) {
             vehiclesPage = vehicleRepository.searchByModelNamePaged(keyword, vehiclePageable);
         } else if (year != null) {
             vehiclesPage = vehicleRepository.filterByYearPaged(year, vehiclePageable);
@@ -84,7 +85,9 @@ public class HomeController {
         List<String> roomConfigs = realEstateRepository.getDistinctRoomConfigs();
         Page<RealEstate> realEstatesPage;
 
-        if (city != null && !city.isEmpty()) {
+        if (keyword != null && !keyword.isEmpty() && "realestate".equals(tab)) {
+            realEstatesPage = realEstateRepository.searchByLocationPaged(keyword, realestatePageable);
+        } else if (city != null && !city.isEmpty()) {
             realEstatesPage = realEstateRepository.findByCityPaged(city, realestatePageable);
         } else if (roomConfig != null && !roomConfig.isEmpty()) {
             realEstatesPage = realEstateRepository.findByRoomConfigPaged(roomConfig, realestatePageable);
@@ -94,7 +97,7 @@ public class HomeController {
 
         // Determine active tab
         String activeTab = "vehicles";
-        if (city != null || roomConfig != null) {
+        if ("realestate".equals(tab) || city != null || roomConfig != null) {
             activeTab = "realestate";
         }
 

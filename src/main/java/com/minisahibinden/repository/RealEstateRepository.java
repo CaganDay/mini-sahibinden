@@ -16,25 +16,25 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
 
     // Get all real estate with listing info (active only) - with pagination
     @Query(value = "SELECT r FROM RealEstate r " +
-            "JOIN FETCH r.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN r.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "ORDER BY l.listingDate DESC",
             countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l WHERE l.status = com.minisahibinden.entity.Listing$Status.Active")
     Page<RealEstate> findAllActivePaged(Pageable pageable);
 
-    // Get all real estate with listing info (active only) - uses JOIN FETCH to avoid N+1
+    // Get all real estate with listing info (active only)
     @Query("SELECT r FROM RealEstate r " +
-            "JOIN FETCH r.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN r.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "ORDER BY l.listingDate DESC")
     List<RealEstate> findAllActive();
 
     // Filter by city - with pagination
     @Query(value = "SELECT r FROM RealEstate r " +
-            "JOIN FETCH r.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN r.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "AND r.city = :city " +
             "ORDER BY l.price DESC",
@@ -43,8 +43,8 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
 
     // Filter by city
     @Query("SELECT r FROM RealEstate r " +
-            "JOIN FETCH r.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN r.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "AND r.city = :city " +
             "ORDER BY l.price DESC")
@@ -52,8 +52,8 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
 
     // Filter by room config - with pagination
     @Query(value = "SELECT r FROM RealEstate r " +
-            "JOIN FETCH r.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN r.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "AND r.roomConfig = :roomConfig " +
             "ORDER BY l.price ASC",
@@ -62,8 +62,8 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
 
     // Filter by room config
     @Query("SELECT r FROM RealEstate r " +
-            "JOIN FETCH r.listing l " +
-            "JOIN FETCH l.user " +
+            "JOIN r.listing l " +
+            "JOIN l.user " +
             "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
             "AND r.roomConfig = :roomConfig " +
             "ORDER BY l.price ASC")
@@ -90,6 +90,16 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
             "(r.city LIKE %:keyword% OR r.district LIKE %:keyword% OR r.neighborhood LIKE %:keyword%) " +
             "ORDER BY l.price DESC", nativeQuery = true)
     List<RealEstate> searchByLocation(@Param("keyword") String keyword);
+
+    // Search by location with pagination
+    @Query(value = "SELECT r FROM RealEstate r " +
+            "JOIN r.listing l " +
+            "JOIN l.user " +
+            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "AND (r.city LIKE %:keyword% OR r.district LIKE %:keyword% OR r.neighborhood LIKE %:keyword%) " +
+            "ORDER BY l.price DESC",
+            countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l WHERE l.status = com.minisahibinden.entity.Listing$Status.Active AND (r.city LIKE %:keyword% OR r.district LIKE %:keyword% OR r.neighborhood LIKE %:keyword%)")
+    Page<RealEstate> searchByLocationPaged(@Param("keyword") String keyword, Pageable pageable);
 
     // Get real estate count
     @Query(value = "SELECT COUNT(*) FROM RealEstate r " +
