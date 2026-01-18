@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Post Ad - Mini Sahibinden</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .nav-pills .nav-link.active { background-color: #ffc107; color: #000; }
+        .nav-pills .nav-link { color: #333; }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-warning pb-3 pt-3" style="background-color: #f8f9fa!important; border-bottom: 1px solid #ddd;">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-dark" href="/">mini<span class="bg-warning px-1 rounded border border-dark">sahibinden</span>.com</a>
+        <a href="/" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0"><i class="fa-solid fa-plus-circle"></i> Post a New Ad</h4>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Success Message -->
+                    <div th:if="${success}" class="alert alert-success" role="alert">
+                        <i class="fa-solid fa-check-circle"></i> <span th:text="${success}">Success!</span>
+                    </div>
+
+                    <!-- Category Tabs -->
+                    <ul class="nav nav-pills mb-4" id="adTypeTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="car-tab" data-bs-toggle="pill" data-bs-target="#car-form" type="button" role="tab">
+                                <i class="fa-solid fa-car"></i> Post a Car
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="house-tab" data-bs-toggle="pill" data-bs-target="#house-form" type="button" role="tab">
+                                <i class="fa-solid fa-house"></i> Post a House
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="adTypeTabsContent">
+                        <!-- CAR FORM -->
+                        <div class="tab-pane fade show active" id="car-form" role="tabpanel">
+                            <form th:action="@{/post/car}" method="post">
+                                <div class="mb-3">
+                                    <label for="carModel" class="form-label">Car Model *</label>
+                                    <input type="text" class="form-control" id="carModel" name="model" 
+                                           placeholder="e.g., BMW 320i, Mercedes C200" required>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="carYear" class="form-label">Model Year *</label>
+                                        <input type="number" class="form-control" id="carYear" name="modelYear" 
+                                               min="1990" max="2026" placeholder="2020" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="carPrice" class="form-label">Price (TL) *</label>
+                                        <input type="number" class="form-control" id="carPrice" name="price" 
+                                               min="0" placeholder="500000" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="carKm" class="form-label">Kilometers *</label>
+                                        <input type="number" class="form-control" id="carKm" name="kilometers" 
+                                               min="0" placeholder="50000" required>
+                                    </div>
+                                </div>
+                                
+                                <hr>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fa-solid fa-paper-plane"></i> Post Car Ad
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- HOUSE FORM -->
+                        <div class="tab-pane fade" id="house-form" role="tabpanel">
+                            <form th:action="@{/post/house}" method="post">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="houseCity" class="form-label">City *</label>
+                                        <select class="form-select" id="houseCity" name="city" required>
+                                            <option value="">Select a city...</option>
+                                            <option th:each="c : ${cities}" th:value="${c}" th:text="${c}">City</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="houseDistrict" class="form-label">District *</label>
+                                        <input type="text" class="form-control" id="houseDistrict" name="district" 
+                                               placeholder="e.g., Kadikoy, Besiktas" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="houseNeighborhood" class="form-label">Neighborhood</label>
+                                    <input type="text" class="form-control" id="houseNeighborhood" name="neighborhood" 
+                                           placeholder="e.g., Moda, Etiler">
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="houseSqm" class="form-label">Square Meters *</label>
+                                        <input type="number" class="form-control" id="houseSqm" name="squareMeters" 
+                                               min="10" max="1000" placeholder="120" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="houseRooms" class="form-label">Room Count *</label>
+                                        <select class="form-select" id="houseRooms" name="roomCount" required>
+                                            <option value="">Select...</option>
+                                            <option value="1+0">1+0 (Studio)</option>
+                                            <option value="1+1">1+1</option>
+                                            <option value="2+1">2+1</option>
+                                            <option value="3+1">3+1</option>
+                                            <option value="4+1">4+1</option>
+                                            <option value="5+1">5+1</option>
+                                            <option value="6+1">6+1</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="housePrice" class="form-label">Price (TL) *</label>
+                                        <input type="number" class="form-control" id="housePrice" name="price" 
+                                               min="0" placeholder="2500000" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="sellerType" class="form-label">Seller Type *</label>
+                                    <select class="form-select" id="sellerType" name="sellerType" required>
+                                        <option value="By Owner">By Owner</option>
+                                        <option value="Real Estate Agency">Real Estate Agency</option>
+                                    </select>
+                                </div>
+                                
+                                <hr>
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fa-solid fa-paper-plane"></i> Post House Ad
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="mt-5 py-3 text-center text-muted border-top">
+    <small>&copy; 2025 Mini-Sahibinden Marketplace</small>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,115 +1,108 @@
 package com.minisahibinden.controller;
 
-import com.minisahibinden.entity.Category;
-import com.minisahibinden.entity.Listing;
-import com.minisahibinden.repository.CategoryRepository;
-import com.minisahibinden.repository.ListingRepository;
+import java.math.BigDecimal;
+import java.util.List;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
+import com.minisahibinden.entity.Car;
+import com.minisahibinden.repository.CarRepository;
 
 @Controller
 @RequestMapping("/queries")
 public class ComplexQueryController {
 
-    private final ListingRepository listingRepository;
-    private final CategoryRepository categoryRepository;
+    private final CarRepository carRepository;
 
-    public ComplexQueryController(ListingRepository listingRepository, CategoryRepository categoryRepository) {
-        this.listingRepository = listingRepository;
-        this.categoryRepository = categoryRepository;
+    public ComplexQueryController(CarRepository carRepository) {
+        this.carRepository = carRepository;
     }
 
     @GetMapping("")
     public String queriesHome(Model model) {
-        List<Category> categories = categoryRepository.findAll();
-        model.addAttribute("categories", categories);
+        List<Integer> years = carRepository.getDistinctYears();
+        model.addAttribute("years", years);
         return "queries";
     }
 
     // ---------------------------------------------------------
-    // COMPLEX QUERY 1: Listings from Active Users
+    // COMPLEX QUERY 1: Cars from Active Users
     // ---------------------------------------------------------
     @GetMapping("/active-users")
-    public String findListingsFromActiveUsers(
-            @RequestParam(name = "minListingCount", defaultValue = "2") int minListingCount,
+    public String findCarsFromActiveUsers(
+            @RequestParam(name = "minCarCount", defaultValue = "2") int minCarCount,
             Model model) {
         
-        List<Listing> listings = listingRepository.findListingsFromActiveUsersSQL(minListingCount);
-        model.addAttribute("listings", listings);
-        model.addAttribute("queryName", "Listings from Active Users");
+        List<Car> cars = carRepository.findCarsFromActiveUsersSQL(minCarCount);
+        model.addAttribute("cars", cars);
+        model.addAttribute("queryName", "Cars from Active Sellers");
         model.addAttribute("queryDescription", 
-            "Shows listings from users who have posted at least " + minListingCount + " listings");
-        model.addAttribute("minListingCount", minListingCount);
+            "Shows cars from sellers who have posted at least " + minCarCount + " cars");
+        model.addAttribute("minCarCount", minCarCount);
         
         return "query-results";
     }
 
     // ---------------------------------------------------------
-    // COMPLEX QUERY 2: Listings Above Category Average
+    // COMPLEX QUERY 2: Cars Above Average Price
     // ---------------------------------------------------------
     @GetMapping("/above-average")
-    public String findListingsAboveCategoryAverage(Model model) {
+    public String findCarsAboveAveragePrice(Model model) {
         
-        List<Listing> listings = listingRepository.findListingsAboveCategoryAverageSQL();
-        model.addAttribute("listings", listings);
-        model.addAttribute("queryName", "Listings Above Category Average Price");
+        List<Car> cars = carRepository.findCarsAboveAveragePriceSQL();
+        model.addAttribute("cars", cars);
+        model.addAttribute("queryName", "Cars Above Average Price");
         model.addAttribute("queryDescription", 
-            "Shows listings where the price is above the average price of their category");
+            "Shows cars where the price is above the overall average price");
         
         return "query-results";
     }
 
     // ---------------------------------------------------------
-    // COMPLEX QUERY 3: Listings by Price and User
+    // COMPLEX QUERY 3: Cars by Price and User
     // ---------------------------------------------------------
     @GetMapping("/price-user-filter")
-    public String findListingsByPriceAndUser(
+    public String findCarsByPriceAndUser(
             @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
             @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
             @RequestParam(name = "userNamePattern", required = false) String userNamePattern,
-            @RequestParam(name = "daysBack", defaultValue = "30") int daysBack,
             Model model) {
         
         // Set default values if not provided
         if (minPrice == null) minPrice = BigDecimal.ZERO;
-        if (maxPrice == null) maxPrice = new BigDecimal("1000000");
+        if (maxPrice == null) maxPrice = new BigDecimal("10000000");
         if (userNamePattern == null || userNamePattern.isEmpty()) userNamePattern = "";
         
-        List<Listing> listings = listingRepository.findListingsByPriceAndUserSQL(
-            minPrice, maxPrice, userNamePattern, daysBack);
+        List<Car> cars = carRepository.findCarsByPriceAndUserSQL(minPrice, maxPrice, userNamePattern);
         
-        model.addAttribute("listings", listings);
-        model.addAttribute("queryName", "Listings by Price Range and User");
+        model.addAttribute("cars", cars);
+        model.addAttribute("queryName", "Cars by Price Range and Seller");
         model.addAttribute("queryDescription", 
-            "Shows listings within price range, posted by users matching name pattern, within last " + daysBack + " days");
+            "Shows cars within price range, posted by sellers matching name pattern");
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
         model.addAttribute("userNamePattern", userNamePattern);
-        model.addAttribute("daysBack", daysBack);
         
         return "query-results";
     }
 
     // ---------------------------------------------------------
-    // COMPLEX QUERY 4: Top Listings Per Category
+    // COMPLEX QUERY 4: Top Cars Per Year
     // ---------------------------------------------------------
-    @GetMapping("/top-per-category")
-    public String findTopListingsPerCategory(
+    @GetMapping("/top-per-year")
+    public String findTopCarsPerYear(
             @RequestParam(name = "topN", defaultValue = "3") int topN,
             Model model) {
         
-        List<Listing> listings = listingRepository.findTopListingsPerCategorySQL(topN);
-        model.addAttribute("listings", listings);
-        model.addAttribute("queryName", "Top " + topN + " Listings Per Category");
+        List<Car> cars = carRepository.findTopCarsPerYearSQL(topN);
+        model.addAttribute("cars", cars);
+        model.addAttribute("queryName", "Top " + topN + " Cars Per Year");
         model.addAttribute("queryDescription", 
-            "Shows the top " + topN + " listings per category ranked by price and date");
+            "Shows the top " + topN + " cars per model year ranked by price");
         model.addAttribute("topN", topN);
         
         return "query-results";
@@ -119,45 +112,36 @@ public class ComplexQueryController {
     // COMPLEX QUERY 5: Complex Multi-Condition Filter
     // ---------------------------------------------------------
     @GetMapping("/complex-filter")
-    public String findListingsWithComplexFilter(
-            @RequestParam(name = "categoryId", required = false) Long categoryId,
+    public String findCarsWithComplexFilter(
+            @RequestParam(name = "minYear", required = false) Integer minYear,
+            @RequestParam(name = "maxYear", required = false) Integer maxYear,
             @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
             @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
-            @RequestParam(name = "startDate", required = false) String startDateStr,
-            @RequestParam(name = "endDate", required = false) String endDateStr,
+            @RequestParam(name = "maxKilometers", required = false) Integer maxKilometers,
             @RequestParam(name = "keyword", required = false) String keyword,
-            @RequestParam(name = "sortBy", defaultValue = "date") String sortBy,
+            @RequestParam(name = "sortBy", defaultValue = "price") String sortBy,
             Model model) {
         
         // Set default values
         if (minPrice == null) minPrice = BigDecimal.ZERO;
-        if (maxPrice == null) maxPrice = new BigDecimal("1000000");
-        if (startDateStr == null || startDateStr.isEmpty()) {
-            startDateStr = LocalDate.now().minusYears(1).toString();
-        }
-        if (endDateStr == null || endDateStr.isEmpty()) {
-            endDateStr = LocalDate.now().toString();
-        }
+        if (maxPrice == null) maxPrice = new BigDecimal("10000000");
         if (keyword == null) keyword = "";
         
-        LocalDate startDate = LocalDate.parse(startDateStr);
-        LocalDate endDate = LocalDate.parse(endDateStr);
+        List<Car> cars = carRepository.findCarsWithComplexFilterSQL(
+            minYear, maxYear, minPrice, maxPrice, maxKilometers, keyword, sortBy);
         
-        List<Listing> listings = listingRepository.findListingsWithComplexFilterSQL(
-            categoryId, minPrice, maxPrice, startDate, endDate, keyword, sortBy);
+        List<Integer> years = carRepository.getDistinctYears();
         
-        List<Category> categories = categoryRepository.findAll();
-        
-        model.addAttribute("listings", listings);
-        model.addAttribute("categories", categories);
+        model.addAttribute("cars", cars);
+        model.addAttribute("years", years);
         model.addAttribute("queryName", "Complex Multi-Condition Filter");
         model.addAttribute("queryDescription", 
-            "Advanced filtering with category, price range, date range, keyword search, and sorting");
-        model.addAttribute("categoryId", categoryId);
+            "Advanced filtering with year range, price range, kilometers, keyword search, and sorting");
+        model.addAttribute("minYear", minYear);
+        model.addAttribute("maxYear", maxYear);
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
-        model.addAttribute("startDate", startDateStr);
-        model.addAttribute("endDate", endDateStr);
+        model.addAttribute("maxKilometers", maxKilometers);
         model.addAttribute("keyword", keyword);
         model.addAttribute("sortBy", sortBy);
         

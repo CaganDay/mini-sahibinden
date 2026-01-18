@@ -3,29 +3,29 @@ package com.minisahibinden.dto;
 import java.math.BigDecimal;
 
 /**
- * DTO for user listing statistics query results
+ * DTO for user car statistics query results
  */
 public class UserListingStatsDTO {
     private Long userId;
     private String firstName;
     private String lastName;
     private String email;
-    private Long listingCount;
-    private BigDecimal totalListingValue;
-    private BigDecimal averageListingPrice;
+    private Long carCount;
+    private BigDecimal totalCarValue;
+    private BigDecimal averageCarPrice;
 
     public UserListingStatsDTO() {}
 
     public UserListingStatsDTO(Long userId, String firstName, String lastName, String email,
-                               Long listingCount, BigDecimal totalListingValue, 
-                               BigDecimal averageListingPrice) {
+                               Long carCount, BigDecimal totalCarValue, 
+                               BigDecimal averageCarPrice) {
         this.userId = userId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.listingCount = listingCount;
-        this.totalListingValue = totalListingValue;
-        this.averageListingPrice = averageListingPrice;
+        this.carCount = carCount;
+        this.totalCarValue = totalCarValue;
+        this.averageCarPrice = averageCarPrice;
     }
 
     // Getters and Setters
@@ -37,12 +37,12 @@ public class UserListingStatsDTO {
     public void setLastName(String lastName) { this.lastName = lastName; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    public Long getListingCount() { return listingCount; }
-    public void setListingCount(Long listingCount) { this.listingCount = listingCount; }
-    public BigDecimal getTotalListingValue() { return totalListingValue; }
-    public void setTotalListingValue(BigDecimal totalListingValue) { this.totalListingValue = totalListingValue; }
-    public BigDecimal getAverageListingPrice() { return averageListingPrice; }
-    public void setAverageListingPrice(BigDecimal averageListingPrice) { this.averageListingPrice = averageListingPrice; }
+    public Long getCarCount() { return carCount; }
+    public void setCarCount(Long carCount) { this.carCount = carCount; }
+    public BigDecimal getTotalCarValue() { return totalCarValue; }
+    public void setTotalCarValue(BigDecimal totalCarValue) { this.totalCarValue = totalCarValue; }
+    public BigDecimal getAverageCarPrice() { return averageCarPrice; }
+    public void setAverageCarPrice(BigDecimal averageCarPrice) { this.averageCarPrice = averageCarPrice; }
 }
 
 

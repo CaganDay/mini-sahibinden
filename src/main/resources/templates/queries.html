@@ -25,25 +25,25 @@
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="mb-3"><i class="fa-solid fa-database text-primary"></i> Complex SQL Queries</h2>
-            <p class="text-muted">Explore advanced SQL queries with different filtering and aggregation capabilities.</p>
+            <h2 class="mb-3"><i class="fa-solid fa-database text-primary"></i> Complex SQL Queries - Car Database</h2>
+            <p class="text-muted">Explore advanced SQL queries with different filtering and aggregation capabilities for our car marketplace.</p>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- Query 1: Active Users -->
+        <!-- Query 1: Active Sellers -->
         <div class="col-md-6">
             <div class="card shadow-sm query-card h-100">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fa-solid fa-users"></i> Query 1: Active Users</h5>
+                    <h5 class="mb-0"><i class="fa-solid fa-users"></i> Query 1: Active Sellers</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small">Find listings from users who have posted multiple listings (uses subquery with GROUP BY and HAVING).</p>
+                    <p class="text-muted small">Find cars from sellers who have posted multiple cars (uses subquery with GROUP BY and HAVING).</p>
                     <form th:action="@{/queries/active-users}" method="get">
                         <div class="mb-3">
-                            <label for="minListingCount1" class="form-label">Minimum Listings Count</label>
-                            <input type="number" class="form-control" id="minListingCount1" 
-                                   name="minListingCount" value="2" min="1" required>
+                            <label for="minCarCount1" class="form-label">Minimum Cars Listed</label>
+                            <input type="number" class="form-control" id="minCarCount1" 
+                                   name="minCarCount" value="2" min="1" required>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fa-solid fa-search"></i> Execute Query
@@ -53,14 +53,14 @@
             </div>
         </div>
 
-        <!-- Query 2: Above Average -->
+        <!-- Query 2: Above Average Price -->
         <div class="col-md-6">
             <div class="card shadow-sm query-card h-100">
                 <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fa-solid fa-chart-line"></i> Query 2: Above Average</h5>
+                    <h5 class="mb-0"><i class="fa-solid fa-chart-line"></i> Query 2: Above Average Price</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small">Find listings priced above their category's average (uses correlated subquery).</p>
+                    <p class="text-muted small">Find cars priced above the overall average (uses correlated subquery).</p>
                     <form th:action="@{/queries/above-average}" method="get">
                         <p class="text-info"><i class="fa-solid fa-info-circle"></i> No parameters needed</p>
                         <button type="submit" class="btn btn-success w-100">
@@ -71,34 +71,29 @@
             </div>
         </div>
 
-        <!-- Query 3: Price and User Filter -->
+        <!-- Query 3: Price and Seller Filter -->
         <div class="col-md-6">
             <div class="card shadow-sm query-card h-100">
                 <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0"><i class="fa-solid fa-filter"></i> Query 3: Price & User Filter</h5>
+                    <h5 class="mb-0"><i class="fa-solid fa-filter"></i> Query 3: Price & Seller Filter</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small">Filter by price range, user name pattern, and recent days (uses JOIN with multiple WHERE conditions).</p>
+                    <p class="text-muted small">Filter by price range and seller name pattern (uses JOIN with multiple WHERE conditions).</p>
                     <form th:action="@{/queries/price-user-filter}" method="get">
                         <div class="mb-2">
-                            <label for="minPrice3" class="form-label">Min Price</label>
+                            <label for="minPrice3" class="form-label">Min Price (TL)</label>
                             <input type="number" class="form-control form-control-sm" id="minPrice3" 
-                                   name="minPrice" value="0" min="0" step="0.01">
+                                   name="minPrice" value="0" min="0" step="1">
                         </div>
                         <div class="mb-2">
-                            <label for="maxPrice3" class="form-label">Max Price</label>
+                            <label for="maxPrice3" class="form-label">Max Price (TL)</label>
                             <input type="number" class="form-control form-control-sm" id="maxPrice3" 
-                                   name="maxPrice" value="1000000" min="0" step="0.01">
-                        </div>
-                        <div class="mb-2">
-                            <label for="userName3" class="form-label">User Name Pattern</label>
-                            <input type="text" class="form-control form-control-sm" id="userName3" 
-                                   name="userNamePattern" placeholder="e.g., John">
+                                   name="maxPrice" value="5000000" min="0" step="1">
                         </div>
                         <div class="mb-3">
-                            <label for="daysBack3" class="form-label">Days Back</label>
-                            <input type="number" class="form-control form-control-sm" id="daysBack3" 
-                                   name="daysBack" value="30" min="1">
+                            <label for="userName3" class="form-label">Seller Name Pattern</label>
+                            <input type="text" class="form-control form-control-sm" id="userName3" 
+                                   name="userNamePattern" placeholder="e.g., John">
                         </div>
                         <button type="submit" class="btn btn-warning w-100">
                             <i class="fa-solid fa-search"></i> Execute Query
@@ -108,17 +103,17 @@
             </div>
         </div>
 
-        <!-- Query 4: Top Per Category -->
+        <!-- Query 4: Top Per Year -->
         <div class="col-md-6">
             <div class="card shadow-sm query-card h-100">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fa-solid fa-trophy"></i> Query 4: Top Per Category</h5>
+                    <h5 class="mb-0"><i class="fa-solid fa-trophy"></i> Query 4: Top Cars Per Year</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small">Get top N listings per category ranked by price (uses window function ROW_NUMBER).</p>
-                    <form th:action="@{/queries/top-per-category}" method="get">
+                    <p class="text-muted small">Get top N cars per model year ranked by price (uses window function ROW_NUMBER).</p>
+                    <form th:action="@{/queries/top-per-year}" method="get">
                         <div class="mb-3">
-                            <label for="topN4" class="form-label">Top N Listings</label>
+                            <label for="topN4" class="form-label">Top N Cars Per Year</label>
                             <input type="number" class="form-control" id="topN4" 
                                    name="topN" value="3" min="1" max="10" required>
                         </div>
@@ -137,60 +132,45 @@
                     <h5 class="mb-0"><i class="fa-solid fa-sliders"></i> Query 5: Complex Multi-Condition Filter</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small">Advanced filtering with category, price range, date range, keyword search, and sorting (uses multiple JOINs, NOT IN subquery, and dynamic sorting).</p>
+                    <p class="text-muted small">Advanced filtering with year range, price range, kilometers, keyword search, and sorting (uses multiple JOINs and dynamic sorting).</p>
                     <form th:action="@{/queries/complex-filter}" method="get">
                         <div class="row">
-                            <div class="col-md-3 mb-2">
-                                <label for="category5" class="form-label">Category</label>
-                                <select class="form-select form-select-sm" id="category5" name="categoryId">
-                                    <option value="">All Categories</option>
-                                    <option th:each="cat : ${categories}" 
-                                            th:value="${cat.id}" 
-                                            th:text="${cat.name}">Category</option>
-                                </select>
+                            <div class="col-md-2 mb-2">
+                                <label for="minYear5" class="form-label">Min Year</label>
+                                <input type="number" class="form-control form-control-sm" id="minYear5" 
+                                       name="minYear" placeholder="e.g., 2010" min="1990" max="2025">
                             </div>
                             <div class="col-md-2 mb-2">
-                                <label for="minPrice5" class="form-label">Min Price</label>
+                                <label for="maxYear5" class="form-label">Max Year</label>
+                                <input type="number" class="form-control form-control-sm" id="maxYear5" 
+                                       name="maxYear" placeholder="e.g., 2023" min="1990" max="2025">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label for="minPrice5" class="form-label">Min Price (TL)</label>
                                 <input type="number" class="form-control form-control-sm" id="minPrice5" 
-                                       name="minPrice" value="0" min="0" step="0.01">
+                                       name="minPrice" value="0" min="0" step="1">
                             </div>
                             <div class="col-md-2 mb-2">
-                                <label for="maxPrice5" class="form-label">Max Price</label>
+                                <label for="maxPrice5" class="form-label">Max Price (TL)</label>
                                 <input type="number" class="form-control form-control-sm" id="maxPrice5" 
-                                       name="maxPrice" value="1000000" min="0" step="0.01">
+                                       name="maxPrice" value="10000000" min="0" step="1">
                             </div>
                             <div class="col-md-2 mb-2">
-                                <label for="startDate5" class="form-label">Start Date</label>
-                                <input type="date" class="form-control form-control-sm" id="startDate5" 
-                                       name="startDate">
+                                <label for="maxKm5" class="form-label">Max Kilometers</label>
+                                <input type="number" class="form-control form-control-sm" id="maxKm5" 
+                                       name="maxKilometers" placeholder="e.g., 150000" min="0">
                             </div>
-                            <div class="col-md-2 mb-2">
-                                <label for="endDate5" class="form-label">End Date</label>
-                                <input type="date" class="form-control form-control-sm" id="endDate5" 
-                                       name="endDate">
-                            </div>
-                            <script>
-                                // Set default dates
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    const today = new Date();
-                                    const oneYearAgo = new Date();
-                                    oneYearAgo.setFullYear(today.getFullYear() - 1);
-                                    
-                                    document.getElementById('startDate5').value = oneYearAgo.toISOString().split('T')[0];
-                                    document.getElementById('endDate5').value = today.toISOString().split('T')[0];
-                                });
-                            </script>
                             <div class="col-md-3 mb-2">
-                                <label for="keyword5" class="form-label">Keyword</label>
+                                <label for="keyword5" class="form-label">Keyword (Model)</label>
                                 <input type="text" class="form-control form-control-sm" id="keyword5" 
-                                       name="keyword" placeholder="Search in title/description">
+                                       name="keyword" placeholder="e.g., BMW, Mercedes">
                             </div>
                             <div class="col-md-2 mb-2">
                                 <label for="sortBy5" class="form-label">Sort By</label>
                                 <select class="form-select form-select-sm" id="sortBy5" name="sortBy">
-                                    <option value="date">Date</option>
                                     <option value="price">Price</option>
-                                    <option value="title">Title</option>
+                                    <option value="year">Year</option>
+                                    <option value="km">Kilometers</option>
                                 </select>
                             </div>
                             <div class="col-md-12 mt-2">
@@ -207,7 +187,7 @@
 </div>
 
 <footer class="mt-5 py-3 text-center text-muted border-top">
-    <small>&copy; 2025 Mini-Sahibinden Project</small>
+    <small>&copy; 2025 Mini-Sahibinden Car Marketplace</small>
 </footer>
 
 </body>

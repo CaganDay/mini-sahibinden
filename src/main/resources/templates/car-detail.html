@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${car.modelYear + ' ' + car.model}">Car Detail</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-warning pb-3 pt-3" style="background-color: #f8f9fa!important; border-bottom: 1px solid #ddd;">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-dark" href="/">mini<span class="bg-warning px-1 rounded border border-dark">sahibinden</span>.com</a>
+        <a href="/" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row">
+        
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <i class="fa-solid fa-car fa-5x"></i>
+                </div>
+                <div class="card-body">
+                    <h2 class="card-title fw-bold mb-3" th:text="${car.modelYear + ' ' + car.model}">Car Model</h2>
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold"><i class="fa-solid fa-calendar"></i> Model Year</h5>
+                            <p class="card-text fs-4" th:text="${car.modelYear}">2020</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="fw-bold"><i class="fa-solid fa-road"></i> Kilometers</h5>
+                            <p class="card-text fs-4" th:text="${#numbers.formatDecimal(car.kilometers, 0, 'COMMA', 0, 'POINT')} + ' km'">0 km</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h5 class="fw-bold">Vehicle Details</h5>
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Model</th>
+                                <td th:text="${car.model}">Model Name</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Year</th>
+                                <td th:text="${car.modelYear}">Year</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Kilometers</th>
+                                <td th:text="${#numbers.formatDecimal(car.kilometers, 0, 'COMMA', 0, 'POINT')} + ' km'">0 km</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-3 border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Price</h6>
+                    <h3 class="text-primary fw-bold" 
+                        th:text="${#numbers.formatDecimal(car.price, 0, 'COMMA', 0, 'POINT')} + ' TL'">
+                        0 TL
+                    </h3>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-bold">Seller Information</div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="fa-solid fa-user text-secondary"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0" th:text="${car.user.firstName} + ' ' + ${car.user.lastName}">Name</h5>
+                            <small class="text-muted">Verified Seller</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success"><i class="fa-solid fa-phone"></i> Show Number</button>
+                        <button class="btn btn-outline-primary"><i class="fa-solid fa-envelope"></i> Send Message</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<footer class="mt-5 py-3 text-center text-muted border-top">
+    <small>&copy; 2025 Mini-Sahibinden Car Marketplace</small>
+</footer>
+
+</body>
+</html>
