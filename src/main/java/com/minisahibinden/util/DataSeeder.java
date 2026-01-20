@@ -41,7 +41,8 @@ public class DataSeeder implements CommandLineRunner {
                 User u = new User(
                     faker.name().fullName(),
                     faker.internet().emailAddress(),
-                    faker.phoneNumber().cellPhone()
+                    faker.phoneNumber().cellPhone(),
+                    String.valueOf(i + 1)  // Password is set to user index
                 );
                 users.add(u);
             }

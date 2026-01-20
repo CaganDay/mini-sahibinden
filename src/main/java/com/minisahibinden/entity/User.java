@@ -31,6 +31,9 @@ public class User {
     @Column(name = "phone", length = 20)
     private String phone;
 
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;
+
     @Column(name = "registration_date")
     private LocalDateTime registrationDate;
 
@@ -42,10 +45,11 @@ public class User {
 
     public User() {}
 
-    public User(String fullName, String email, String phone) {
+    public User(String fullName, String email, String phone, String password) {
         this.fullName = fullName;
         this.email = email;
         this.phone = phone;
+        this.password = password;
         this.registrationDate = LocalDateTime.now();
     }
 
@@ -61,6 +65,9 @@ public class User {
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
     public LocalDateTime getRegistrationDate() { return registrationDate; }
     public void setRegistrationDate(LocalDateTime registrationDate) { this.registrationDate = registrationDate; }

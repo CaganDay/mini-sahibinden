@@ -25,6 +25,8 @@ import com.minisahibinden.repository.RealEstateRepository;
 import com.minisahibinden.repository.UserRepository;
 import com.minisahibinden.repository.VehicleRepository;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 public class HomeController {
 
@@ -199,7 +201,11 @@ public class HomeController {
     }
 
     @GetMapping("/post")
-    public String showPostAdForm(Model model) {
+    public String showPostAdForm(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        if (session.getAttribute("loggedInUser") == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to post an ad.");
+            return "redirect:/login";
+        }
         model.addAttribute("cities", TURKEY_CITIES);
         return "post-ad";
     }
@@ -209,22 +215,19 @@ public class HomeController {
                               @RequestParam Integer modelYear,
                               @RequestParam BigDecimal price,
                               @RequestParam Integer kilometers,
+                              HttpSession session,
                               RedirectAttributes redirectAttributes) {
-        // Get or create a default user
-        User user = userRepository.findById(1)
-                .orElseGet(() -> {
-                    User newUser = new User("Default User", "default@example.com", "555-0000");
-                    return userRepository.save(newUser);
-                });
-
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to post an ad.");
+            return "redirect:/login";
+        }
         // Create listing
         Listing listing = new Listing(user, price, LocalDate.now(), Listing.Category.Vehicle);
         listing = listingRepository.save(listing);
-
         // Create vehicle
         Vehicle vehicle = new Vehicle(listing, modelYear, modelName, kilometers);
         vehicleRepository.save(vehicle);
-
         redirectAttributes.addFlashAttribute("success", "Vehicle ad posted successfully!");
         return "redirect:/post";
     }
@@ -237,23 +240,20 @@ public class HomeController {
                                  @RequestParam String roomConfig,
                                  @RequestParam BigDecimal price,
                                  @RequestParam String sellerType,
+                                 HttpSession session,
                                  RedirectAttributes redirectAttributes) {
-        // Get or create a default user
-        User user = userRepository.findById(1)
-                .orElseGet(() -> {
-                    User newUser = new User("Default User", "default@example.com", "555-0000");
-                    return userRepository.save(newUser);
-                });
-
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to post an ad.");
+            return "redirect:/login";
+        }
         // Create listing
         Listing listing = new Listing(user, price, LocalDate.now(), Listing.Category.RealEstate);
         listing = listingRepository.save(listing);
-
         // Create real estate
         RealEstate realEstate = new RealEstate(listing, sellerType, areaSqm, roomConfig,
                 city, district, neighborhood != null ? neighborhood : "Unknown");
         realEstateRepository.save(realEstate);
-
         redirectAttributes.addFlashAttribute("success", "Real estate ad posted successfully!");
         return "redirect:/post";
     }
