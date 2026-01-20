@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My Ads - Mini Sahibinden</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h2>My Posted Ads</h2>
+    <hr>
+    <div th:if="${myAds != null}">
+        <div th:if="${#lists.isEmpty(myAds)}" class="alert alert-info">You haven't posted any ads yet.</div>
+        <table class="table table-striped" th:unless="${#lists.isEmpty(myAds)}">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Price</th>
+                    <th>Category</th>
+                    <th>Date Posted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="ad : ${myAds}">
+                    <td th:text="${ad.displayTitle}">Title</td>
+                    <td th:text="${#numbers.formatDecimal(ad.price, 0, 'COMMA', 0, 'POINT')} + ' TL'">Price</td>
+                    <td th:text="${ad.category}">Category</td>
+                    <td th:text="${ad.listingDate}">Date</td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <a th:if="${ad.category.name() == 'Vehicle'}"
+                               th:href="@{/vehicle/{id}(id=${ad.listingId})}"
+                               class="btn btn-sm btn-info">View</a>
+                            <a th:if="${ad.category.name() == 'RealEstate'}"
+                               th:href="@{/realestate/{id}(id=${ad.listingId})}"
+                               class="btn btn-sm btn-info">View</a>
+                            <form th:action="@{/delete-ad/{id}(id=${ad.listingId})}" method="post" 
+                                  onsubmit="return confirm('Are you sure you want to delete this ad?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div th:if="${myAds == null}" class="alert alert-danger">An error occurred while loading your ads.</div>
+    <a href="/" class="btn btn-secondary">Back to Home</a>
+</div>
+</body>
+</html>

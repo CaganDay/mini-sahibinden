@@ -101,4 +101,21 @@ public class Listing {
 
     public List<Favorite> getFavorites() { return favorites; }
     public void setFavorites(List<Favorite> favorites) { this.favorites = favorites; }
+
+    public boolean isOwnedBy(User candidate) {
+        return candidate != null
+                && this.user != null
+                && this.user.getUserId() != null
+                && this.user.getUserId().equals(candidate.getUserId());
+    }
+
+    public String getDisplayTitle() {
+        if (category == Category.Vehicle && vehicle != null) {
+            return vehicle.getModelYear() + " " + vehicle.getModelName();
+        }
+        if (category == Category.RealEstate && realEstate != null) {
+            return realEstate.getCity() + ", " + realEstate.getDistrict();
+        }
+        return "Listing #" + listingId;
+    }
 }

@@ -3,7 +3,9 @@ package com.minisahibinden.controller;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,12 +16,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.minisahibinden.entity.Listing;
 import com.minisahibinden.entity.RealEstate;
 import com.minisahibinden.entity.User;
 import com.minisahibinden.entity.Vehicle;
+import com.minisahibinden.repository.FavoriteRepository;
 import com.minisahibinden.repository.ListingRepository;
 import com.minisahibinden.repository.RealEstateRepository;
 import com.minisahibinden.repository.UserRepository;
@@ -36,6 +40,7 @@ public class HomeController {
     private final RealEstateRepository realEstateRepository;
     private final ListingRepository listingRepository;
     private final UserRepository userRepository;
+    private final FavoriteRepository favoriteRepository;
 
     // All 81 cities of Turkey
     private static final List<String> TURKEY_CITIES = Arrays.asList(
@@ -50,11 +55,13 @@ public class HomeController {
     );
 
     public HomeController(VehicleRepository vehicleRepository, RealEstateRepository realEstateRepository,
-                         ListingRepository listingRepository, UserRepository userRepository) {
+                         ListingRepository listingRepository, UserRepository userRepository,
+                         FavoriteRepository favoriteRepository) {
         this.vehicleRepository = vehicleRepository;
         this.realEstateRepository = realEstateRepository;
         this.listingRepository = listingRepository;
         this.userRepository = userRepository;
+        this.favoriteRepository = favoriteRepository;
     }
 
     @GetMapping("/")
@@ -256,5 +263,125 @@ public class HomeController {
         realEstateRepository.save(realEstate);
         redirectAttributes.addFlashAttribute("success", "Real estate ad posted successfully!");
         return "redirect:/post";
+    }
+
+    @GetMapping("/my-ads")
+    public String myAds(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        // Check if the user is logged in
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to see your ads.");
+            return "redirect:/login";
+        }
+
+        // Fetch ads belonging to the logged-in user
+        try {
+            List<Listing> userAds = listingRepository.findByUserId(user.getUserId());
+            model.addAttribute("myAds", userAds);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "An error occurred while fetching your ads.");
+            return "redirect:/";
+        }
+
+        return "my-ads";
+    }
+
+    @PostMapping("/delete-ad/{id}")
+    public String deleteAd(@PathVariable Integer id, HttpSession session, RedirectAttributes redirectAttributes) {
+        User currentUser = (User) session.getAttribute("loggedInUser");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in.");
+            return "redirect:/login";
+        }
+
+        int updated = listingRepository.softDeleteByIdAndUserId(id, currentUser.getUserId());
+        if (updated == 1) {
+            redirectAttributes.addFlashAttribute("success", "Ad deleted successfully.");
+        } else {
+            // either listing doesn't exist or it's not owned by this user (or already deleted)
+            redirectAttributes.addFlashAttribute("error", "Ad not found or unauthorized action.");
+        }
+
+        return "redirect:/my-ads";
+    }
+
+    @PostMapping("/favorites/{listingId}")
+    public String addFavorite(@PathVariable Integer listingId, HttpSession session, RedirectAttributes redirectAttributes) {
+        User currentUser = (User) session.getAttribute("loggedInUser");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to favorite ads.");
+            return "redirect:/login";
+        }
+
+        // avoid duplicates
+        if (favoriteRepository.existsFavorite(currentUser.getUserId(), listingId) == 0) {
+            favoriteRepository.addFavorite(currentUser.getUserId(), listingId);
+            redirectAttributes.addFlashAttribute("success", "Added to favorites.");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Already in favorites.");
+        }
+
+        return "redirect:/";
+    }
+
+    @PostMapping("/favorites/{listingId}/remove")
+    public String removeFavorite(@PathVariable Integer listingId, HttpSession session, RedirectAttributes redirectAttributes) {
+        User currentUser = (User) session.getAttribute("loggedInUser");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in.");
+            return "redirect:/login";
+        }
+
+        int removed = favoriteRepository.removeFavorite(currentUser.getUserId(), listingId);
+        if (removed == 1) {
+            redirectAttributes.addFlashAttribute("success", "Removed from favorites.");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Favorite not found.");
+        }
+
+        return "redirect:/my-favorites";
+    }
+
+    @GetMapping("/my-favorites")
+    public String myFavorites(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to see your favorites.");
+            return "redirect:/login";
+        }
+
+        model.addAttribute("favorites", favoriteRepository.findFavoriteListingsByUserId(user.getUserId()));
+        return "my-favorites";
+    }
+
+    /**
+     * Seeds random favorites for ALL users: each user gets 1-5 favorites.
+     * Uses only active listings not owned by that user, avoids duplicates.
+     */
+    @PostMapping("/favorites/seed")
+    @ResponseBody
+    public String seedRandomFavorites() {
+        List<User> users = userRepository.findAll();
+        Random rnd = new Random();
+
+        for (User u : users) {
+            List<Integer> candidates = listingRepository.findAllActiveListingIdsNotOwnedBy(u.getUserId());
+            if (candidates == null || candidates.isEmpty()) continue;
+
+            Collections.shuffle(candidates, rnd);
+
+            int want = 1 + rnd.nextInt(5);
+            int added = 0;
+
+            for (Integer listingId : candidates) {
+                if (added >= want) break;
+                if (favoriteRepository.existsFavorite(u.getUserId(), listingId) == 0) {
+                    favoriteRepository.addFavorite(u.getUserId(), listingId);
+                    added++;
+                }
+            }
+        }
+
+        return "OK";
     }
 }

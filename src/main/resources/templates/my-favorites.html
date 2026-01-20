@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My Favorites - Mini Sahibinden</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h2>My Favorite Ads</h2>
+    <hr>
+
+    <div th:if="${#lists.isEmpty(favorites)}" class="alert alert-info">You have no favorites yet.</div>
+
+    <table class="table table-striped" th:unless="${#lists.isEmpty(favorites)}">
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>Price</th>
+            <th>Category</th>
+            <th>Date Posted</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="ad : ${favorites}">
+            <td th:text="${ad.displayTitle}">Title</td>
+            <td th:text="${#numbers.formatDecimal(ad.price, 0, 'COMMA', 0, 'POINT')} + ' TL'">Price</td>
+            <td th:text="${ad.category}">Category</td>
+            <td th:text="${ad.listingDate}">Date</td>
+            <td>
+                <div class="d-flex gap-2">
+                    <a th:if="${ad.category.name() == 'Vehicle'}"
+                       th:href="@{/vehicle/{id}(id=${ad.listingId})}"
+                       class="btn btn-sm btn-info">View</a>
+                    <a th:if="${ad.category.name() == 'RealEstate'}"
+                       th:href="@{/realestate/{id}(id=${ad.listingId})}"
+                       class="btn btn-sm btn-info">View</a>
+
+                    <form th:action="@{/favorites/{id}/remove(id=${ad.listingId})}" method="post" class="m-0">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <a href="/" class="btn btn-secondary">Back to Home</a>
+</div>
+</body>
+</html>

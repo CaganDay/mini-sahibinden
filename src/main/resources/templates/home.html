@@ -30,8 +30,13 @@
             </a>
             <a class="btn btn-primary btn-sm ms-3 text-white fw-bold shadow-sm" th:href="@{/post}">+ Post Ad</a>
             
-            <!-- User Auth Section -->
             <div th:if="${session.loggedInUser != null}" class="d-flex align-items-center ms-3">
+                <a class="btn btn-outline-dark btn-sm me-2" th:href="@{/my-favorites}">
+                    <i class="fa-solid fa-heart"></i> My Favorites
+                </a>
+                <a class="btn btn-outline-dark btn-sm me-3" th:href="@{/my-ads}">
+                    <i class="fa-solid fa-list"></i> My Ads
+                </a>
                 <span class="text-dark me-2">
                     <i class="fa-solid fa-user-circle"></i> 
                     <span th:text="${session.loggedInUserName}">User</span>
@@ -53,7 +58,6 @@
 </nav>
 
 <div class="container mt-4">
-    <!-- Flash Messages -->
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fa-solid fa-check-circle me-2"></i>
         <span th:text="${success}"></span>
@@ -65,7 +69,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <!-- Category Tabs -->
     <ul class="nav nav-pills mb-4" id="categoryTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button th:class="${activeTab == 'vehicles'} ? 'nav-link active' : 'nav-link'" id="vehicles-tab" data-bs-toggle="pill" data-bs-target="#vehicles-section" type="button" role="tab">
@@ -80,11 +83,9 @@
     </ul>
 
     <div class="tab-content" id="categoryTabsContent">
-        <!-- VEHICLES SECTION -->
         <div th:class="${activeTab == 'vehicles'} ? 'tab-pane fade show active' : 'tab-pane fade'" id="vehicles-section" role="tabpanel">
             <div class="row">
                 <div class="col-md-3">
-                    <!-- Advanced Filter Panel -->
                     <div class="card shadow-sm mb-4">
                         <div class="card-header bg-warning fw-bold d-flex justify-content-between align-items-center">
                             <span><i class="fa-solid fa-filter"></i> Filter Vehicles</span>
@@ -94,14 +95,12 @@
                             <form action="/" method="get" id="vehicleFilterForm">
                                 <input type="hidden" name="tab" value="vehicles">
                                 
-                                <!-- Model Name -->
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Model Name</label>
                                     <input type="text" class="form-control form-control-sm" name="modelName" 
                                            th:value="${param.modelName}" placeholder="e.g. BMW, Mercedes...">
                                 </div>
                                 
-                                <!-- Year Range -->
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Model Year</label>
                                     <div class="row g-2">
@@ -122,7 +121,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Price Range -->
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Price (TL)</label>
                                     <div class="row g-2">
@@ -141,7 +139,6 @@
                                     </small>
                                 </div>
                                 
-                                <!-- Kilometers Range -->
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Kilometers</label>
                                     <div class="row g-2">
@@ -167,7 +164,6 @@
                         </div>
                     </div>
                     
-                    <!-- Quick Year Links -->
                     <div class="card shadow-sm mb-4">
                         <div class="card-header bg-white fw-bold">Quick Filter by Year</div>
                         <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
@@ -208,13 +204,22 @@
                                 </div>
                                 <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
                                     <small class="text-muted" th:text="'Year: ' + ${vehicle.modelYear}">Year</small>
-                                    <a th:href="@{/vehicle/{id}(id=${vehicle.listingId})}" class="btn btn-sm btn-outline-primary">View</a>
+                                    <div class="d-flex gap-2">
+                                        <a th:href="@{/vehicle/{id}(id=${vehicle.listingId})}" class="btn btn-sm btn-outline-primary">View</a>
+
+                                        <form th:if="${session.loggedInUser != null}"
+                                              th:action="@{/favorites/{id}(id=${vehicle.listingId})}"
+                                              method="post" class="m-0">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Add to favorites">
+                                                <i class="fa-solid fa-heart"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Vehicle Pagination -->
                     <nav th:if="${vehiclesPage.totalPages > 1}" class="mt-4" aria-label="Vehicle page navigation">
                         <ul class="pagination justify-content-center">
                             <li class="page-item" th:classappend="${vehiclesPage.first} ? 'disabled'">
@@ -245,21 +250,14 @@
                                 <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number + 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">»</a>
                             </li>
                         </ul>
-                        <p class="text-center text-muted small">
-                            Showing <span th:text="${vehiclesPage.numberOfElements}">0</span> of 
-                            <span th:text="${vehiclesPage.totalElements}">0</span> vehicles 
-                            (Page <span th:text="${vehiclesPage.number + 1}">1</span> of <span th:text="${vehiclesPage.totalPages}">1</span>)
-                        </p>
                     </nav>
                 </div>
             </div>
         </div>
 
-        <!-- REAL ESTATE SECTION -->
         <div th:class="${activeTab == 'realestate'} ? 'tab-pane fade show active' : 'tab-pane fade'" id="realestate-section" role="tabpanel">
             <div class="row">
                 <div class="col-md-3">
-                    <!-- Advanced Filter Panel for Real Estate -->
                     <div class="card shadow-sm mb-4">
                         <div class="card-header bg-success text-white fw-bold d-flex justify-content-between align-items-center">
                             <span><i class="fa-solid fa-filter"></i> Filter Real Estate</span>
@@ -268,8 +266,6 @@
                         <div class="card-body">
                             <form action="/" method="get" id="realEstateFilterForm">
                                 <input type="hidden" name="tab" value="realestate">
-                                
-                                <!-- City -->
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">City</label>
                                     <select class="form-select form-select-sm" name="filterCity">
@@ -278,8 +274,6 @@
                                                 th:selected="${param.filterCity != null && param.filterCity[0] == c}"></option>
                                     </select>
                                 </div>
-                                
-                                <!-- Room Configuration -->
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Room Config</label>
                                     <select class="form-select form-select-sm" name="filterRoomConfig">
@@ -288,8 +282,6 @@
                                                 th:selected="${param.filterRoomConfig != null && param.filterRoomConfig[0] == rc}"></option>
                                     </select>
                                 </div>
-                                
-                                <!-- Seller Type -->
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Seller Type</label>
                                     <select class="form-select form-select-sm" name="filterSellerType">
@@ -298,8 +290,6 @@
                                                 th:selected="${param.filterSellerType != null && param.filterSellerType[0] == st}"></option>
                                     </select>
                                 </div>
-                                
-                                <!-- Price Range -->
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Price (TL)</label>
                                     <div class="row g-2">
@@ -312,13 +302,7 @@
                                                    th:value="${param.maxPriceRe}" placeholder="Max" min="0">
                                         </div>
                                     </div>
-                                    <small class="text-muted" th:if="${rePriceMin != null}">
-                                        Range: <span th:text="${#numbers.formatDecimal(rePriceMin, 0, 'COMMA', 0, 'POINT')}">0</span> - 
-                                        <span th:text="${#numbers.formatDecimal(rePriceMax, 0, 'COMMA', 0, 'POINT')}">0</span> TL
-                                    </small>
                                 </div>
-                                
-                                <!-- Area Range -->
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Area (m²)</label>
                                     <div class="row g-2">
@@ -331,27 +315,12 @@
                                                    th:value="${param.maxArea}" placeholder="Max" min="0">
                                         </div>
                                     </div>
-                                    <small class="text-muted" th:if="${areaMin != null}">
-                                        Range: <span th:text="${areaMin}">0</span> - <span th:text="${areaMax}">0</span> m²
-                                    </small>
                                 </div>
-                                
                                 <button type="submit" class="btn btn-success w-100 fw-bold">
                                     <i class="fa-solid fa-search"></i> Apply Filters
                                 </button>
                             </form>
                         </div>
-                    </div>
-                    
-                    <!-- Quick City Links -->
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-white fw-bold">Quick Filter by City</div>
-                        <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
-                            <li class="list-group-item d-flex justify-content-between align-items-center py-1" th:each="c : ${cities}">
-                                <a th:href="@{/(city=${c})}" class="text-decoration-none text-dark small" th:text="${c}">City</a>
-                                <span class="badge bg-secondary rounded-pill" style="font-size: 0.7rem;">></span>
-                            </li>
-                        </ul>
                     </div>
                 </div>
 
@@ -384,55 +353,84 @@
                                         <i class="fa-solid fa-door-open"></i> 
                                         <span th:text="${re.roomConfig}">0</span>
                                     </small>
-                                    <small class="text-muted">
-                                        <i class="fa-solid fa-user"></i> 
-                                        <span th:text="${re.sellerType}">Seller</span>
-                                    </small>
                                 </div>
                                 <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
                                     <small class="text-muted" th:text="${re.neighborhood}">Neighborhood</small>
-                                    <a th:href="@{/realestate/{id}(id=${re.listingId})}" class="btn btn-sm btn-outline-success">View</a>
+                                    <div class="d-flex gap-2">
+                                        <a th:href="@{/realestate/{id}(id=${re.listingId})}" class="btn btn-sm btn-outline-success">View</a>
+
+                                        <form th:if="${session.loggedInUser != null}"
+                                              th:action="@{/favorites/{id}(id=${re.listingId})}"
+                                              method="post" class="m-0">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Add to favorites">
+                                                <i class="fa-solid fa-heart"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Real Estate Pagination -->
                     <nav th:if="${realEstatesPage.totalPages > 1}" class="mt-4" aria-label="Real Estate page navigation">
                         <ul class="pagination justify-content-center">
                             <li class="page-item" th:classappend="${realEstatesPage.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.number - 1}, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate', filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType}, minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">«</a>
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${realEstatesPage.number - 1}, tab='realestate', keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">«</a>
                             </li>
+
                             <li class="page-item" th:if="${realEstatesPage.number > 0}">
-                                <a class="page-link" th:href="@{/(realestatePage=0, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate', filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType}, minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">1</a>
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=0, tab='realestate', keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">1</a>
                             </li>
+
                             <li class="page-item disabled" th:if="${realEstatesPage.number > 2}">
                                 <span class="page-link">...</span>
                             </li>
+
                             <li class="page-item" th:if="${realEstatesPage.number > 1}">
-                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.number - 1}, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate', filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType}, minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}" th:text="${realEstatesPage.number}"></a>
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${realEstatesPage.number - 1}, tab='realestate', keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}"
+                                   th:text="${realEstatesPage.number}">X</a>
                             </li>
+
                             <li class="page-item active">
-                                <span class="page-link" th:text="${realEstatesPage.number + 1}"></span>
+                                <span class="page-link" th:text="${realEstatesPage.number + 1}">X</span>
                             </li>
+
                             <li class="page-item" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 2}">
-                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.number + 1}, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate', filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType}, minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}" th:text="${realEstatesPage.number + 2}"></a>
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${realEstatesPage.number + 1}, tab='realestate', keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}"
+                                   th:text="${realEstatesPage.number + 2}">X</a>
                             </li>
+
                             <li class="page-item disabled" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 3}">
                                 <span class="page-link">...</span>
                             </li>
+
                             <li class="page-item" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 1}">
-                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.totalPages - 1}, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate', filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType}, minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}" th:text="${realEstatesPage.totalPages}"></a>
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${realEstatesPage.totalPages - 1}, tab='realestate', keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}"
+                                   th:text="${realEstatesPage.totalPages}">N</a>
                             </li>
+
                             <li class="page-item" th:classappend="${realEstatesPage.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/(realestatePage=${realEstatesPage.number + 1}, city=${param.city}, roomConfig=${param.roomConfig}, keyword=${param.keyword}, tab='realestate', filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType}, minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">»</a>
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${realEstatesPage.number + 1}, tab='realestate', keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">»</a>
                             </li>
                         </ul>
-                        <p class="text-center text-muted small">
-                            Showing <span th:text="${realEstatesPage.numberOfElements}">0</span> of 
-                            <span th:text="${realEstatesPage.totalElements}">0</span> properties 
-                            (Page <span th:text="${realEstatesPage.number + 1}">1</span> of <span th:text="${realEstatesPage.totalPages}">1</span>)
-                        </p>
                     </nav>
                 </div>
             </div>
@@ -446,7 +444,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Update hidden tab input and placeholder when user clicks on tabs
     document.getElementById('vehicles-tab').addEventListener('click', function() {
         document.getElementById('tabInput').value = 'vehicles';
         document.getElementById('searchInput').placeholder = 'Search vehicles by model name...';
