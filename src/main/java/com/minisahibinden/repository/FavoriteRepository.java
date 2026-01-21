@@ -15,18 +15,11 @@ import com.minisahibinden.entity.Favorite.FavoriteId;
 @Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, FavoriteId> {
 
-    // Find favorites by user
+    // Find favorites by user 
     @Query(value = "SELECT * FROM Favorites WHERE user_id = :userId ORDER BY added_at DESC", nativeQuery = true)
     List<Favorite> findByUserId(@Param("userId") Integer userId);
 
-    // Check if listing is favorited by user
-    @Query(value = "SELECT COUNT(*) > 0 FROM Favorites WHERE user_id = :userId AND listing_id = :listingId", nativeQuery = true)
-    boolean isFavorited(@Param("userId") Integer userId, @Param("listingId") Integer listingId);
-
-    // Count favorites for a listing
-    @Query(value = "SELECT COUNT(*) FROM Favorites WHERE listing_id = :listingId", nativeQuery = true)
-    long countByListingId(@Param("listingId") Integer listingId);
-
+    // Check if the Listing is already added to favorites
     @Query(value = "SELECT COUNT(*) FROM Favorites WHERE user_id = :userId AND listing_id = :listingId", nativeQuery = true)
     int existsFavorite(@Param("userId") Integer userId, @Param("listingId") Integer listingId);
 

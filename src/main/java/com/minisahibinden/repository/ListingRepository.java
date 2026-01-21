@@ -18,17 +18,9 @@ public interface ListingRepository extends JpaRepository<Listing, Integer> {
     @Query(value = "SELECT * FROM Listings WHERE status = 'Active' ORDER BY listing_date DESC", nativeQuery = true)
     List<Listing> findAllActive();
 
-    // Find listings by category
-    @Query(value = "SELECT * FROM Listings WHERE category = :category AND status = 'Active' ORDER BY listing_date DESC", nativeQuery = true)
-    List<Listing> findByCategory(@Param("category") String category);
-
     // Find listings by user (excluding deleted)
     @Query(value = "SELECT * FROM Listings WHERE user_id = :userId AND status <> 'Deleted' ORDER BY listing_date DESC", nativeQuery = true)
     List<Listing> findByUserId(@Param("userId") Integer userId);
-
-    // Count active listings
-    @Query(value = "SELECT COUNT(*) FROM Listings WHERE status = 'Active'", nativeQuery = true)
-    long countActive();
 
     // Count by category
     @Query(value = "SELECT COUNT(*) FROM Listings WHERE category = :category AND status = 'Active'", nativeQuery = true)

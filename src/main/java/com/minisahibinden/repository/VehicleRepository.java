@@ -18,56 +18,30 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
     @Query(value = "SELECT v FROM Vehicle v " +
             "JOIN v.listing l " +
             "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "WHERE l.status = 'Active' " +
             "ORDER BY l.listingDate DESC",
-            countQuery = "SELECT COUNT(v) FROM Vehicle v JOIN v.listing l WHERE l.status = com.minisahibinden.entity.Listing$Status.Active")
+            countQuery = "SELECT COUNT(v) FROM Vehicle v JOIN v.listing l WHERE l.status = 'Active'")
     Page<Vehicle> findAllActivePaged(Pageable pageable);
-
-    // Get all vehicles with listing info (active only)
-    @Query("SELECT v FROM Vehicle v " +
-            "JOIN v.listing l " +
-            "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
-            "ORDER BY l.listingDate DESC")
-    List<Vehicle> findAllActive();
 
     // Search vehicles by model name - with pagination
     @Query(value = "SELECT v FROM Vehicle v " +
             "JOIN v.listing l " +
             "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "WHERE l.status = 'Active' " +
             "AND v.modelName LIKE %:keyword% " +
             "ORDER BY l.price DESC",
-            countQuery = "SELECT COUNT(v) FROM Vehicle v JOIN v.listing l WHERE l.status = com.minisahibinden.entity.Listing$Status.Active AND v.modelName LIKE %:keyword%")
+            countQuery = "SELECT COUNT(v) FROM Vehicle v JOIN v.listing l WHERE l.status = 'Active' AND v.modelName LIKE %:keyword%")
     Page<Vehicle> searchByModelNamePaged(@Param("keyword") String keyword, Pageable pageable);
-
-    // Search vehicles by model name
-    @Query("SELECT v FROM Vehicle v " +
-            "JOIN v.listing l " +
-            "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
-            "AND v.modelName LIKE %:keyword% " +
-            "ORDER BY l.price DESC")
-    List<Vehicle> searchByModelName(@Param("keyword") String keyword);
 
     // Filter by year - with pagination
     @Query(value = "SELECT v FROM Vehicle v " +
             "JOIN v.listing l " +
             "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "WHERE l.status = 'Active' " +
             "AND v.modelYear = :year " +
             "ORDER BY l.price DESC",
-            countQuery = "SELECT COUNT(v) FROM Vehicle v JOIN v.listing l WHERE l.status = com.minisahibinden.entity.Listing$Status.Active AND v.modelYear = :year")
+            countQuery = "SELECT COUNT(v) FROM Vehicle v JOIN v.listing l WHERE l.status = 'Active' AND v.modelYear = :year")
     Page<Vehicle> filterByYearPaged(@Param("year") Integer year, Pageable pageable);
-
-    // Filter by year
-    @Query("SELECT v FROM Vehicle v " +
-            "JOIN v.listing l " +
-            "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
-            "AND v.modelYear = :year " +
-            "ORDER BY l.price DESC")
-    List<Vehicle> filterByYear(@Param("year") Integer year);
 
     // Get distinct years
     @Query(value = "SELECT DISTINCT v.model_year FROM Vehicles v " +
@@ -167,7 +141,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
     @Query(value = "SELECT v FROM Vehicle v " +
             "JOIN v.listing l " +
             "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "WHERE l.status = 'Active' " +
             "AND (:minYear IS NULL OR v.modelYear >= :minYear) " +
             "AND (:maxYear IS NULL OR v.modelYear <= :maxYear) " +
             "AND (:minPrice IS NULL OR l.price >= :minPrice) " +
@@ -177,7 +151,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
             "AND (:modelName IS NULL OR :modelName = '' OR LOWER(v.modelName) LIKE LOWER(CONCAT('%', :modelName, '%'))) " +
             "ORDER BY l.listingDate DESC",
             countQuery = "SELECT COUNT(v) FROM Vehicle v JOIN v.listing l " +
-                    "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+                    "WHERE l.status = 'Active' " +
                     "AND (:minYear IS NULL OR v.modelYear >= :minYear) " +
                     "AND (:maxYear IS NULL OR v.modelYear <= :maxYear) " +
                     "AND (:minPrice IS NULL OR l.price >= :minPrice) " +

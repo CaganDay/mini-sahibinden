@@ -18,56 +18,30 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
     @Query(value = "SELECT r FROM RealEstate r " +
             "JOIN r.listing l " +
             "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "WHERE l.status = 'Active' " +
             "ORDER BY l.listingDate DESC",
-            countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l WHERE l.status = com.minisahibinden.entity.Listing$Status.Active")
+            countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l WHERE l.status = 'Active'")
     Page<RealEstate> findAllActivePaged(Pageable pageable);
-
-    // Get all real estate with listing info (active only)
-    @Query("SELECT r FROM RealEstate r " +
-            "JOIN r.listing l " +
-            "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
-            "ORDER BY l.listingDate DESC")
-    List<RealEstate> findAllActive();
 
     // Filter by city - with pagination
     @Query(value = "SELECT r FROM RealEstate r " +
             "JOIN r.listing l " +
             "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "WHERE l.status = 'Active' " +
             "AND r.city = :city " +
             "ORDER BY l.price DESC",
-            countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l WHERE l.status = com.minisahibinden.entity.Listing$Status.Active AND r.city = :city")
+            countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l WHERE l.status = 'Active' AND r.city = :city")
     Page<RealEstate> findByCityPaged(@Param("city") String city, Pageable pageable);
-
-    // Filter by city
-    @Query("SELECT r FROM RealEstate r " +
-            "JOIN r.listing l " +
-            "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
-            "AND r.city = :city " +
-            "ORDER BY l.price DESC")
-    List<RealEstate> findByCity(@Param("city") String city);
 
     // Filter by room config - with pagination
     @Query(value = "SELECT r FROM RealEstate r " +
             "JOIN r.listing l " +
             "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "WHERE l.status = 'Active' " +
             "AND r.roomConfig = :roomConfig " +
             "ORDER BY l.price ASC",
-            countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l WHERE l.status = com.minisahibinden.entity.Listing$Status.Active AND r.roomConfig = :roomConfig")
+            countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l WHERE l.status = 'Active' AND r.roomConfig = :roomConfig")
     Page<RealEstate> findByRoomConfigPaged(@Param("roomConfig") String roomConfig, Pageable pageable);
-
-    // Filter by room config
-    @Query("SELECT r FROM RealEstate r " +
-            "JOIN r.listing l " +
-            "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
-            "AND r.roomConfig = :roomConfig " +
-            "ORDER BY l.price ASC")
-    List<RealEstate> findByRoomConfig(@Param("roomConfig") String roomConfig);
 
     // Get distinct cities
     @Query(value = "SELECT DISTINCT r.city FROM RealEstate r " +
@@ -83,22 +57,14 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
             "ORDER BY r.room_config ASC", nativeQuery = true)
     List<String> getDistinctRoomConfigs();
 
-    // Search by location (city, district, or neighborhood)
-    @Query(value = "SELECT r.* FROM RealEstate r " +
-            "INNER JOIN Listings l ON r.listing_id = l.listing_id " +
-            "WHERE l.status = 'Active' AND " +
-            "(r.city LIKE %:keyword% OR r.district LIKE %:keyword% OR r.neighborhood LIKE %:keyword%) " +
-            "ORDER BY l.price DESC", nativeQuery = true)
-    List<RealEstate> searchByLocation(@Param("keyword") String keyword);
-
     // Search by location with pagination
     @Query(value = "SELECT r FROM RealEstate r " +
             "JOIN r.listing l " +
             "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "WHERE l.status = 'Active' " +
             "AND (r.city LIKE %:keyword% OR r.district LIKE %:keyword% OR r.neighborhood LIKE %:keyword%) " +
             "ORDER BY l.price DESC",
-            countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l WHERE l.status = com.minisahibinden.entity.Listing$Status.Active AND (r.city LIKE %:keyword% OR r.district LIKE %:keyword% OR r.neighborhood LIKE %:keyword%)")
+            countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l WHERE l.status = 'Active' AND (r.city LIKE %:keyword% OR r.district LIKE %:keyword% OR r.neighborhood LIKE %:keyword%)")
     Page<RealEstate> searchByLocationPaged(@Param("keyword") String keyword, Pageable pageable);
 
     // Get real estate count
@@ -115,7 +81,7 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
     @Query(value = "SELECT r FROM RealEstate r " +
             "JOIN r.listing l " +
             "JOIN l.user " +
-            "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+            "WHERE l.status = 'Active' " +
             "AND (:filterCity IS NULL OR :filterCity = '' OR r.city = :filterCity) " +
             "AND (:filterRoomConfig IS NULL OR :filterRoomConfig = '' OR r.roomConfig = :filterRoomConfig) " +
             "AND (:filterSellerType IS NULL OR :filterSellerType = '' OR r.sellerType = :filterSellerType) " +
@@ -125,7 +91,7 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
             "AND (:maxArea IS NULL OR r.areaSqm <= :maxArea) " +
             "ORDER BY l.listingDate DESC",
             countQuery = "SELECT COUNT(r) FROM RealEstate r JOIN r.listing l " +
-                    "WHERE l.status = com.minisahibinden.entity.Listing$Status.Active " +
+                    "WHERE l.status = 'Active' " +
                     "AND (:filterCity IS NULL OR :filterCity = '' OR r.city = :filterCity) " +
                     "AND (:filterRoomConfig IS NULL OR :filterRoomConfig = '' OR r.roomConfig = :filterRoomConfig) " +
                     "AND (:filterSellerType IS NULL OR :filterSellerType = '' OR r.sellerType = :filterSellerType) " +
