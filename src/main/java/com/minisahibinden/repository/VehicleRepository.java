@@ -158,7 +158,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
                     "AND (:maxPrice IS NULL OR l.price <= :maxPrice) " +
                     "AND (:minKm IS NULL OR v.kilometers >= :minKm) " +
                     "AND (:maxKm IS NULL OR v.kilometers <= :maxKm) " +
-                    "AND (:modelName IS NULL OR :modelName = '' OR LOWER(v.modelName) LIKE LOWER(CONCAT('%', :modelName, '%')))")
+                    "AND (:modelName IS NULL OR :modelName = '' OR LOWER(v.modelName) LIKE LOWER(CONCAT('%', :modelName, '%')))") 
     Page<Vehicle> filterVehiclesPaged(
             @Param("minYear") Integer minYear,
             @Param("maxYear") Integer maxYear,
@@ -168,6 +168,35 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
             @Param("maxKm") Integer maxKm,
             @Param("modelName") String modelName,
             Pageable pageable);
+
+    // "Get a good deal": vehicles priced below the ACTIVE average for the same model year (paged)
+    @Query(
+        value = "SELECT v.* " +
+                "FROM Vehicles v " +
+                "JOIN Listings l ON l.listing_id = v.listing_id " +
+                "WHERE l.status = 'Active' " +
+                "  AND l.price < ( " +
+                "      SELECT AVG(l2.price) " +
+                "      FROM Vehicles v2 " +
+                "      JOIN Listings l2 ON l2.listing_id = v2.listing_id " +
+                "      WHERE l2.status = 'Active' " +
+                "        AND v2.model_year = v.model_year " +
+                "  ) " +
+                "ORDER BY l.price ASC",
+        countQuery = "SELECT COUNT(*) " +
+                     "FROM Vehicles v " +
+                     "JOIN Listings l ON l.listing_id = v.listing_id " +
+                     "WHERE l.status = 'Active' " +
+                     "  AND l.price < ( " +
+                     "      SELECT AVG(l2.price) " +
+                     "      FROM Vehicles v2 " +
+                     "      JOIN Listings l2 ON l2.listing_id = v2.listing_id " +
+                     "      WHERE l2.status = 'Active' " +
+                     "        AND v2.model_year = v.model_year " +
+                     "  )",
+        nativeQuery = true
+    )
+    Page<Vehicle> findGoodDealVehiclesPaged(Pageable pageable);
 
     // Get min and max values for filter ranges
     @Query(value = "SELECT MIN(v.model_year), MAX(v.model_year), " +

@@ -178,9 +178,21 @@
                 <div class="col-md-9">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="mb-0"><i class="fa-solid fa-car"></i> Available Vehicles</h4>
-                        <span class="badge bg-secondary" th:if="${hasAdvancedFilter}">
-                            <i class="fa-solid fa-filter"></i> Filters applied
-                        </span>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <a class="btn btn-sm btn-outline-success"
+                               th:href="@{/(tab='vehicles', goodDeal=true, goodDealPage=0,
+                                           keyword=${param.keyword}, year=${param.year},
+                                           minYear=${param.minYear}, maxYear=${param.maxYear},
+                                           minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                           minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">
+                                Get a good deal
+                            </a>
+
+                            <span class="badge bg-secondary" th:if="${hasAdvancedFilter}">
+                                <i class="fa-solid fa-filter"></i> Filters applied
+                            </span>
+                        </div>
                     </div>
                     
                     <div th:if="${#lists.isEmpty(vehicles)}" class="alert alert-info">
@@ -223,31 +235,84 @@
                     <nav th:if="${vehiclesPage.totalPages > 1}" class="mt-4" aria-label="Vehicle page navigation">
                         <ul class="pagination justify-content-center">
                             <li class="page-item" th:classappend="${vehiclesPage.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number - 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">«</a>
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : vehiclesPage.number - 1)},
+                                               goodDealPage=${(goodDeal ? vehiclesPage.number - 1 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">«</a>
                             </li>
+
                             <li class="page-item" th:if="${vehiclesPage.number > 0}">
-                                <a class="page-link" th:href="@{/(vehiclePage=0, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">1</a>
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : 0)},
+                                               goodDealPage=${(goodDeal ? 0 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">1</a>
                             </li>
+
                             <li class="page-item disabled" th:if="${vehiclesPage.number > 2}">
                                 <span class="page-link">...</span>
                             </li>
+
                             <li class="page-item" th:if="${vehiclesPage.number > 1}">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number - 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}" th:text="${vehiclesPage.number}"></a>
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : vehiclesPage.number - 1)},
+                                               goodDealPage=${(goodDeal ? vehiclesPage.number - 1 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}"
+                                   th:text="${vehiclesPage.number}"></a>
                             </li>
+
                             <li class="page-item active">
                                 <span class="page-link" th:text="${vehiclesPage.number + 1}"></span>
                             </li>
+
                             <li class="page-item" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 2}">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number + 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}" th:text="${vehiclesPage.number + 2}"></a>
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : vehiclesPage.number + 1)},
+                                               goodDealPage=${(goodDeal ? vehiclesPage.number + 1 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}"
+                                   th:text="${vehiclesPage.number + 2}"></a>
                             </li>
+
                             <li class="page-item disabled" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 3}">
                                 <span class="page-link">...</span>
                             </li>
+
                             <li class="page-item" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 1}">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.totalPages - 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}" th:text="${vehiclesPage.totalPages}"></a>
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : vehiclesPage.totalPages - 1)},
+                                               goodDealPage=${(goodDeal ? vehiclesPage.totalPages - 1 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}"
+                                   th:text="${vehiclesPage.totalPages}"></a>
                             </li>
+
                             <li class="page-item" th:classappend="${vehiclesPage.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/(vehiclePage=${vehiclesPage.number + 1}, keyword=${param.keyword}, year=${param.year}, minYear=${param.minYear}, maxYear=${param.maxYear}, minPrice=${param.minPrice}, maxPrice=${param.maxPrice}, minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">»</a>
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : vehiclesPage.number + 1)},
+                                               goodDealPage=${(goodDeal ? vehiclesPage.number + 1 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">»</a>
                             </li>
                         </ul>
                     </nav>

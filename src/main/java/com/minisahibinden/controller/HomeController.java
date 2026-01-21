@@ -73,6 +73,9 @@ public class HomeController {
                        @RequestParam(name = "vehiclePage", defaultValue = "0") int vehiclePage,
                        @RequestParam(name = "realestatePage", defaultValue = "0") int realestatePage,
                        @RequestParam(name = "tab", required = false) String tab,
+                       // "Good deal" mode (vehicles)
+                       @RequestParam(name = "goodDeal", required = false, defaultValue = "false") boolean goodDeal,
+                       @RequestParam(name = "goodDealPage", defaultValue = "0") int goodDealPage,
                        // Vehicle filter parameters
                        @RequestParam(name = "minYear", required = false) Integer minYear,
                        @RequestParam(name = "maxYear", required = false) Integer maxYear,
@@ -91,6 +94,7 @@ public class HomeController {
                        @RequestParam(name = "maxArea", required = false) Integer maxArea) {
 
         Pageable vehiclePageable = PageRequest.of(vehiclePage, PAGE_SIZE);
+        Pageable goodDealPageable = PageRequest.of(goodDealPage, PAGE_SIZE);
         Pageable realestatePageable = PageRequest.of(realestatePage, PAGE_SIZE);
 
         // Vehicle filters
@@ -103,7 +107,11 @@ public class HomeController {
                                     minKm != null || maxKm != null ||
                                     (modelName != null && !modelName.isEmpty());
 
-        if (hasAdvancedFilter) {
+        // "Good deal" mode should also show the "Filters applied" badge
+        if (goodDeal && !"realestate".equals(tab)) {
+            vehiclesPage = vehicleRepository.findGoodDealVehiclesPaged(goodDealPageable);
+            hasAdvancedFilter = true;
+        } else if (hasAdvancedFilter) {
             // Use advanced filter with all parameters
             vehiclesPage = vehicleRepository.filterVehiclesPaged(
                     minYear, maxYear, minPrice, maxPrice, minKm, maxKm, modelName, vehiclePageable);
@@ -187,6 +195,7 @@ public class HomeController {
         model.addAttribute("activeTab", activeTab);
         model.addAttribute("hasAdvancedFilter", hasAdvancedFilter);
         model.addAttribute("hasReAdvancedFilter", hasReAdvancedFilter);
+        model.addAttribute("goodDeal", goodDeal);
 
         return "home";
     }
