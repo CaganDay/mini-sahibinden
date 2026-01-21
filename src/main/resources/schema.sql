@@ -36,7 +36,8 @@ CREATE TABLE Listings (
 
 -- Vehicles table (extends Listings for car/vehicle specific fields)
 CREATE TABLE Vehicles (
-    listing_id INT PRIMARY KEY,
+    vehicle_id INT AUTO_INCREMENT PRIMARY KEY,
+    listing_id INT UNIQUE NOT NULL,
     model_year INT NOT NULL,
     model_name VARCHAR(150) NOT NULL,
     kilometers INT NOT NULL,
@@ -45,7 +46,8 @@ CREATE TABLE Vehicles (
 
 -- RealEstate table (extends Listings for house/property specific fields)
 CREATE TABLE RealEstate (
-    listing_id INT PRIMARY KEY,
+    real_estate_id INT AUTO_INCREMENT PRIMARY KEY,
+    listing_id INT UNIQUE NOT NULL,
     seller_type VARCHAR(50),
     area_sqm INT NOT NULL,
     room_config VARCHAR(20),
