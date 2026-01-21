@@ -102,6 +102,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
             "ORDER BY ranked.model_year DESC, ranked.price DESC", nativeQuery = true)
     List<Vehicle> findTopVehiclesPerYearSQL(@Param("topN") int topN);
 
+    //not used
     // COMPLEX QUERY 5: Complex multi-condition filter with sorting
     @Query(value = "SELECT v.* FROM Vehicles v " +
             "INNER JOIN Listings l ON v.listing_id = l.listing_id " +

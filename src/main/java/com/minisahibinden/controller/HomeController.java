@@ -91,11 +91,15 @@ public class HomeController {
                        @RequestParam(name = "minPriceRe", required = false) BigDecimal minPriceRe,
                        @RequestParam(name = "maxPriceRe", required = false) BigDecimal maxPriceRe,
                        @RequestParam(name = "minArea", required = false) Integer minArea,
-                       @RequestParam(name = "maxArea", required = false) Integer maxArea) {
+                       @RequestParam(name = "maxArea", required = false) Integer maxArea,
+                       // "Good deal" mode (real estate)
+                       @RequestParam(name = "goodDealRe", required = false, defaultValue = "false") boolean goodDealRe,
+                       @RequestParam(name = "goodDealRePage", defaultValue = "0") int goodDealRePage) {
 
         Pageable vehiclePageable = PageRequest.of(vehiclePage, PAGE_SIZE);
         Pageable goodDealPageable = PageRequest.of(goodDealPage, PAGE_SIZE);
         Pageable realestatePageable = PageRequest.of(realestatePage, PAGE_SIZE);
+        Pageable goodDealRePageable = PageRequest.of(goodDealRePage, PAGE_SIZE);
 
         // Vehicle filters
         List<Integer> years = vehicleRepository.getDistinctYears();
@@ -152,7 +156,10 @@ public class HomeController {
                                       minPriceRe != null || maxPriceRe != null ||
                                       minArea != null || maxArea != null;
 
-        if (hasReAdvancedFilter) {
+        if (goodDealRe && "realestate".equals(tab)) {
+            realEstatesPage = realEstateRepository.findGoodDealRealEstatePaged(goodDealRePageable);
+            hasReAdvancedFilter = true;
+        } else if (hasReAdvancedFilter) {
             // Use advanced filter with all parameters
             realEstatesPage = realEstateRepository.filterRealEstatePaged(
                     filterCity, filterRoomConfig, filterSellerType,
@@ -196,6 +203,7 @@ public class HomeController {
         model.addAttribute("hasAdvancedFilter", hasAdvancedFilter);
         model.addAttribute("hasReAdvancedFilter", hasReAdvancedFilter);
         model.addAttribute("goodDeal", goodDeal);
+        model.addAttribute("goodDealRe", goodDealRe);
 
         return "home";
     }

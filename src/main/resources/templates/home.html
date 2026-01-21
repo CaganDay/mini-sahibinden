@@ -392,9 +392,20 @@
                 <div class="col-md-9">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="mb-0"><i class="fa-solid fa-house"></i> Available Real Estate</h4>
-                        <span class="badge bg-success" th:if="${hasReAdvancedFilter}">
-                            <i class="fa-solid fa-filter"></i> Filters applied
-                        </span>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <a class="btn btn-sm btn-outline-success"
+                               th:href="@{/(tab='realestate', goodDealRe=true, goodDealRePage=0,
+                                           keyword=${param.keyword},
+                                           filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                           minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">
+                                Get a good deal
+                            </a>
+
+                            <span class="badge bg-success" th:if="${hasReAdvancedFilter}">
+                                <i class="fa-solid fa-filter"></i> Filters applied
+                            </span>
+                        </div>
                     </div>
                     
                     <div th:if="${#lists.isEmpty(realEstates)}" class="alert alert-info">
@@ -441,14 +452,18 @@
                         <ul class="pagination justify-content-center">
                             <li class="page-item" th:classappend="${realEstatesPage.first} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/(realestatePage=${realEstatesPage.number - 1}, tab='realestate', keyword=${param.keyword},
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : realEstatesPage.number - 1)},
+                                               goodDealRePage=${(goodDealRe ? realEstatesPage.number - 1 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
                                                filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
                                                minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">«</a>
                             </li>
 
                             <li class="page-item" th:if="${realEstatesPage.number > 0}">
                                 <a class="page-link"
-                                   th:href="@{/(realestatePage=0, tab='realestate', keyword=${param.keyword},
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : 0)},
+                                               goodDealRePage=${(goodDealRe ? 0 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
                                                filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
                                                minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">1</a>
                             </li>
@@ -459,7 +474,9 @@
 
                             <li class="page-item" th:if="${realEstatesPage.number > 1}">
                                 <a class="page-link"
-                                   th:href="@{/(realestatePage=${realEstatesPage.number - 1}, tab='realestate', keyword=${param.keyword},
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : realEstatesPage.number - 1)},
+                                               goodDealRePage=${(goodDealRe ? realEstatesPage.number - 1 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
                                                filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
                                                minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}"
                                    th:text="${realEstatesPage.number}">X</a>
@@ -471,7 +488,9 @@
 
                             <li class="page-item" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 2}">
                                 <a class="page-link"
-                                   th:href="@{/(realestatePage=${realEstatesPage.number + 1}, tab='realestate', keyword=${param.keyword},
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : realEstatesPage.number + 1)},
+                                               goodDealRePage=${(goodDealRe ? realEstatesPage.number + 1 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
                                                filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
                                                minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}"
                                    th:text="${realEstatesPage.number + 2}">X</a>
@@ -483,7 +502,9 @@
 
                             <li class="page-item" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 1}">
                                 <a class="page-link"
-                                   th:href="@{/(realestatePage=${realEstatesPage.totalPages - 1}, tab='realestate', keyword=${param.keyword},
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : realEstatesPage.totalPages - 1)},
+                                               goodDealRePage=${(goodDealRe ? realEstatesPage.totalPages - 1 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
                                                filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
                                                minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}"
                                    th:text="${realEstatesPage.totalPages}">N</a>
@@ -491,7 +512,9 @@
 
                             <li class="page-item" th:classappend="${realEstatesPage.last} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/(realestatePage=${realEstatesPage.number + 1}, tab='realestate', keyword=${param.keyword},
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : realEstatesPage.number + 1)},
+                                               goodDealRePage=${(goodDealRe ? realEstatesPage.number + 1 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
                                                filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
                                                minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">»</a>
                             </li>

@@ -125,64 +125,6 @@
             </div>
         </div>
 
-        <!-- Query 5: Complex Filter -->
-        <div class="col-md-12">
-            <div class="card shadow-sm query-card">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0"><i class="fa-solid fa-sliders"></i> Query 5: Complex Multi-Condition Filter</h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted small">Advanced filtering with year range, price range, kilometers, keyword search, and sorting (uses multiple JOINs and dynamic sorting).</p>
-                    <form th:action="@{/queries/complex-filter}" method="get">
-                        <div class="row">
-                            <div class="col-md-2 mb-2">
-                                <label for="minYear5" class="form-label">Min Year</label>
-                                <input type="number" class="form-control form-control-sm" id="minYear5" 
-                                       name="minYear" placeholder="e.g., 2010" min="1990" max="2025">
-                            </div>
-                            <div class="col-md-2 mb-2">
-                                <label for="maxYear5" class="form-label">Max Year</label>
-                                <input type="number" class="form-control form-control-sm" id="maxYear5" 
-                                       name="maxYear" placeholder="e.g., 2023" min="1990" max="2025">
-                            </div>
-                            <div class="col-md-2 mb-2">
-                                <label for="minPrice5" class="form-label">Min Price (TL)</label>
-                                <input type="number" class="form-control form-control-sm" id="minPrice5" 
-                                       name="minPrice" value="0" min="0" step="1">
-                            </div>
-                            <div class="col-md-2 mb-2">
-                                <label for="maxPrice5" class="form-label">Max Price (TL)</label>
-                                <input type="number" class="form-control form-control-sm" id="maxPrice5" 
-                                       name="maxPrice" value="10000000" min="0" step="1">
-                            </div>
-                            <div class="col-md-2 mb-2">
-                                <label for="maxKm5" class="form-label">Max Kilometers</label>
-                                <input type="number" class="form-control form-control-sm" id="maxKm5" 
-                                       name="maxKilometers" placeholder="e.g., 150000" min="0">
-                            </div>
-                            <div class="col-md-3 mb-2">
-                                <label for="keyword5" class="form-label">Keyword (Model)</label>
-                                <input type="text" class="form-control form-control-sm" id="keyword5" 
-                                       name="keyword" placeholder="e.g., BMW, Mercedes">
-                            </div>
-                            <div class="col-md-2 mb-2">
-                                <label for="sortBy5" class="form-label">Sort By</label>
-                                <select class="form-select form-select-sm" id="sortBy5" name="sortBy">
-                                    <option value="price">Price</option>
-                                    <option value="year">Year</option>
-                                    <option value="km">Kilometers</option>
-                                </select>
-                            </div>
-                            <div class="col-md-12 mt-2">
-                                <button type="submit" class="btn btn-danger w-100">
-                                    <i class="fa-solid fa-search"></i> Execute Complex Query
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 

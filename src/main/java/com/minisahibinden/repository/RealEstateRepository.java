@@ -109,6 +109,31 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
             @Param("maxArea") Integer maxArea,
             Pageable pageable);
 
+    // "Get a good deal": cheapest ACTIVE real estate per city (paged)
+    @Query(
+        value = "SELECT r.* " +
+                "FROM RealEstate r " +
+                "JOIN Listings l ON r.listing_id = l.listing_id " +
+                "WHERE l.status = 'Active' " +
+                "  AND l.price = ( " +
+                "      SELECT MIN(l2.price) " +
+                "      FROM RealEstate r2 " +
+                "      JOIN Listings l2 ON r2.listing_id = l2.listing_id " +
+                "      WHERE r2.city = r.city " +
+                "        AND l2.status = 'Active' " +
+                "  ) " +
+                "ORDER BY r.city ASC, l.price ASC",
+        countQuery = "SELECT COUNT(*) FROM ( " +
+                     "  SELECT r.city AS city " +
+                     "  FROM RealEstate r " +
+                     "  JOIN Listings l ON r.listing_id = l.listing_id " +
+                     "  WHERE l.status = 'Active' " +
+                     "  GROUP BY r.city " +
+                     ") x",
+        nativeQuery = true
+    )
+    Page<RealEstate> findGoodDealRealEstatePaged(Pageable pageable);
+
     // Get min and max values for filter ranges
     @Query(value = "SELECT MIN(l.price), MAX(l.price), " +
             "MIN(r.area_sqm), MAX(r.area_sqm) " +
