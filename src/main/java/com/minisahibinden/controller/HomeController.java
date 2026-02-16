@@ -1,67 +1,404 @@
 package com.minisahibinden.controller;
 
-import com.minisahibinden.entity.Category;
-import com.minisahibinden.entity.Listing;
-import com.minisahibinden.repository.CategoryRepository;
-import com.minisahibinden.repository.ListingRepository;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+import com.minisahibinden.entity.Listing;
+import com.minisahibinden.entity.RealEstate;
+import com.minisahibinden.entity.User;
+import com.minisahibinden.entity.Vehicle;
+import com.minisahibinden.repository.FavoriteRepository;
+import com.minisahibinden.repository.ListingRepository;
+import com.minisahibinden.repository.RealEstateRepository;
+import com.minisahibinden.repository.UserRepository;
+import com.minisahibinden.repository.VehicleRepository;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class HomeController {
 
-    // 1. Define the Repositories we need
-    private final CategoryRepository categoryRepository;
-    private final ListingRepository listingRepository;
+    private static final int PAGE_SIZE = 12; // Show 12 items per page for better performance
 
-    // 2. Constructor Injection (Spring automatically connects them here)
-    public HomeController(CategoryRepository categoryRepository, ListingRepository listingRepository) {
-        this.categoryRepository = categoryRepository;
+    private final VehicleRepository vehicleRepository;
+    private final RealEstateRepository realEstateRepository;
+    private final ListingRepository listingRepository;
+    private final UserRepository userRepository;
+    private final FavoriteRepository favoriteRepository;
+
+    // All 81 cities of Turkey
+    private static final List<String> TURKEY_CITIES = Arrays.asList(
+        "Adana", "Adiyaman", "Afyonkarahisar", "Agri", "Aksaray", "Amasya", "Ankara", "Antalya", "Ardahan", "Artvin",
+        "Aydin", "Balikesir", "Bartin", "Batman", "Bayburt", "Bilecik", "Bingol", "Bitlis", "Bolu", "Burdur",
+        "Bursa", "Canakkale", "Cankiri", "Corum", "Denizli", "Diyarbakir", "Duzce", "Edirne", "Elazig", "Erzincan",
+        "Erzurum", "Eskisehir", "Gaziantep", "Giresun", "Gumushane", "Hakkari", "Hatay", "Igdir", "Isparta", "Istanbul",
+        "Izmir", "Kahramanmaras", "Karabuk", "Karaman", "Kars", "Kastamonu", "Kayseri", "Kilis", "Kirikkale", "Kirklareli",
+        "Kirsehir", "Kocaeli", "Konya", "Kutahya", "Malatya", "Manisa", "Mardin", "Mersin", "Mugla", "Mus",
+        "Nevsehir", "Nigde", "Ordu", "Osmaniye", "Rize", "Sakarya", "Samsun", "Sanliurfa", "Siirt", "Sinop",
+        "Sirnak", "Sivas", "Tekirdag", "Tokat", "Trabzon", "Tunceli", "Usak", "Van", "Yalova", "Yozgat", "Zonguldak"
+    );
+
+    public HomeController(VehicleRepository vehicleRepository, RealEstateRepository realEstateRepository,
+                         ListingRepository listingRepository, UserRepository userRepository,
+                         FavoriteRepository favoriteRepository) {
+        this.vehicleRepository = vehicleRepository;
+        this.realEstateRepository = realEstateRepository;
         this.listingRepository = listingRepository;
+        this.userRepository = userRepository;
+        this.favoriteRepository = favoriteRepository;
     }
 
     @GetMapping("/")
-    public String home(Model model, 
+    public String home(Model model,
                        @RequestParam(name = "keyword", required = false) String keyword,
-                       @RequestParam(name = "categoryId", required = false) Long categoryId) {
-        
-        List<Category> categories = categoryRepository.findAll();
-        List<Listing> listings;
+                       @RequestParam(name = "year", required = false) Integer year,
+                       @RequestParam(name = "city", required = false) String city,
+                       @RequestParam(name = "roomConfig", required = false) String roomConfig,
+                       @RequestParam(name = "vehiclePage", defaultValue = "0") int vehiclePage,
+                       @RequestParam(name = "realestatePage", defaultValue = "0") int realestatePage,
+                       @RequestParam(name = "tab", required = false) String tab,
+                       // "Good deal" mode (vehicles)
+                       @RequestParam(name = "goodDeal", required = false, defaultValue = "false") boolean goodDeal,
+                       @RequestParam(name = "goodDealPage", defaultValue = "0") int goodDealPage,
+                       // Vehicle filter parameters
+                       @RequestParam(name = "minYear", required = false) Integer minYear,
+                       @RequestParam(name = "maxYear", required = false) Integer maxYear,
+                       @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+                       @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+                       @RequestParam(name = "minKm", required = false) Integer minKm,
+                       @RequestParam(name = "maxKm", required = false) Integer maxKm,
+                       @RequestParam(name = "modelName", required = false) String modelName,
+                       // Real Estate filter parameters
+                       @RequestParam(name = "filterCity", required = false) String filterCity,
+                       @RequestParam(name = "filterRoomConfig", required = false) String filterRoomConfig,
+                       @RequestParam(name = "filterSellerType", required = false) String filterSellerType,
+                       @RequestParam(name = "minPriceRe", required = false) BigDecimal minPriceRe,
+                       @RequestParam(name = "maxPriceRe", required = false) BigDecimal maxPriceRe,
+                       @RequestParam(name = "minArea", required = false) Integer minArea,
+                       @RequestParam(name = "maxArea", required = false) Integer maxArea,
+                       // "Good deal" mode (real estate)
+                       @RequestParam(name = "goodDealRe", required = false, defaultValue = "false") boolean goodDealRe,
+                       @RequestParam(name = "goodDealRePage", defaultValue = "0") int goodDealRePage) {
 
-        if (keyword != null && !keyword.isEmpty()) {
-            // Case 1: Use our CUSTOM SQL for searching
-            listings = listingRepository.searchListingsSQL(keyword);
-            
-        } else if (categoryId != null) {
-            // Case 2: Use our CUSTOM SQL for filtering
-            listings = listingRepository.filterByCategorySQL(categoryId);
-            
+        Pageable vehiclePageable = PageRequest.of(vehiclePage, PAGE_SIZE);
+        Pageable goodDealPageable = PageRequest.of(goodDealPage, PAGE_SIZE);
+        Pageable realestatePageable = PageRequest.of(realestatePage, PAGE_SIZE);
+        Pageable goodDealRePageable = PageRequest.of(goodDealRePage, PAGE_SIZE);
+
+        // Vehicle filters
+        List<Integer> years = vehicleRepository.getDistinctYears();
+        Page<Vehicle> vehiclesPage;
+
+        // Check if any advanced filter is applied
+        boolean hasAdvancedFilter = minYear != null || maxYear != null || 
+                                    minPrice != null || maxPrice != null || 
+                                    minKm != null || maxKm != null ||
+                                    (modelName != null && !modelName.isEmpty());
+
+        // "Good deal" mode should also show the "Filters applied" badge
+        if (goodDeal && !"realestate".equals(tab)) {
+            vehiclesPage = vehicleRepository.findGoodDealVehiclesPaged(goodDealPageable);
+            hasAdvancedFilter = true;
+        } else if (hasAdvancedFilter) {
+            // Use advanced filter with all parameters
+            vehiclesPage = vehicleRepository.filterVehiclesPaged(
+                    minYear, maxYear, minPrice, maxPrice, minKm, maxKm, modelName, vehiclePageable);
+        } else if (keyword != null && !keyword.isEmpty() && !"realestate".equals(tab)) {
+            vehiclesPage = vehicleRepository.searchByModelNamePaged(keyword, vehiclePageable);
+        } else if (year != null) {
+            vehiclesPage = vehicleRepository.filterByYearPaged(year, vehiclePageable);
         } else {
-            // Case 3: Standard Find All (Still using JPA default here)
-            listings = listingRepository.findAll();
+            vehiclesPage = vehicleRepository.findAllActivePaged(vehiclePageable);
         }
 
-        model.addAttribute("categories", categories);
-        model.addAttribute("listings", listings);
-        
+        // Get filter ranges for the UI
+        Object[] filterRanges = vehicleRepository.getFilterRanges();
+        if (filterRanges != null && filterRanges.length > 0) {
+            Object[] ranges = (Object[]) filterRanges[0];
+            model.addAttribute("yearMin", ranges[0]);
+            model.addAttribute("yearMax", ranges[1]);
+            model.addAttribute("priceMin", ranges[2]);
+            model.addAttribute("priceMax", ranges[3]);
+            model.addAttribute("kmMin", ranges[4]);
+            model.addAttribute("kmMax", ranges[5]);
+        }
+
+        // Get distinct model names for filter
+        List<String> modelNames = vehicleRepository.getDistinctModelNames();
+        model.addAttribute("modelNames", modelNames);
+
+        // RealEstate filters
+        List<String> cities = realEstateRepository.getDistinctCitiesFromDb();
+        List<String> roomConfigs = realEstateRepository.getDistinctRoomConfigs();
+        List<String> sellerTypes = realEstateRepository.getDistinctSellerTypes();
+        Page<RealEstate> realEstatesPage;
+
+        // Check if any real estate advanced filter is applied
+        boolean hasReAdvancedFilter = (filterCity != null && !filterCity.isEmpty()) ||
+                                      (filterRoomConfig != null && !filterRoomConfig.isEmpty()) ||
+                                      (filterSellerType != null && !filterSellerType.isEmpty()) ||
+                                      minPriceRe != null || maxPriceRe != null ||
+                                      minArea != null || maxArea != null;
+
+        if (goodDealRe && "realestate".equals(tab)) {
+            realEstatesPage = realEstateRepository.findGoodDealRealEstatePaged(goodDealRePageable);
+            hasReAdvancedFilter = true;
+        } else if (hasReAdvancedFilter) {
+            // Use advanced filter with all parameters
+            realEstatesPage = realEstateRepository.filterRealEstatePaged(
+                    filterCity, filterRoomConfig, filterSellerType,
+                    minPriceRe, maxPriceRe, minArea, maxArea, realestatePageable);
+        } else if (keyword != null && !keyword.isEmpty() && "realestate".equals(tab)) {
+            realEstatesPage = realEstateRepository.searchByLocationPaged(keyword, realestatePageable);
+        } else if (city != null && !city.isEmpty()) {
+            realEstatesPage = realEstateRepository.findByCityPaged(city, realestatePageable);
+        } else if (roomConfig != null && !roomConfig.isEmpty()) {
+            realEstatesPage = realEstateRepository.findByRoomConfigPaged(roomConfig, realestatePageable);
+        } else {
+            realEstatesPage = realEstateRepository.findAllActivePaged(realestatePageable);
+        }
+
+        // Get real estate filter ranges for the UI
+        Object[] reFilterRanges = realEstateRepository.getRealEstateFilterRanges();
+        if (reFilterRanges != null && reFilterRanges.length > 0) {
+            Object[] reRanges = (Object[]) reFilterRanges[0];
+            model.addAttribute("rePriceMin", reRanges[0]);
+            model.addAttribute("rePriceMax", reRanges[1]);
+            model.addAttribute("areaMin", reRanges[2]);
+            model.addAttribute("areaMax", reRanges[3]);
+        }
+
+        // Determine active tab
+        String activeTab = "vehicles";
+        if ("realestate".equals(tab) || city != null || roomConfig != null || hasReAdvancedFilter) {
+            activeTab = "realestate";
+        }
+
+        // Add to model
+        model.addAttribute("years", years);
+        model.addAttribute("vehicles", vehiclesPage.getContent());
+        model.addAttribute("vehiclesPage", vehiclesPage);
+        model.addAttribute("cities", cities);
+        model.addAttribute("roomConfigs", roomConfigs);
+        model.addAttribute("sellerTypes", sellerTypes);
+        model.addAttribute("realEstates", realEstatesPage.getContent());
+        model.addAttribute("realEstatesPage", realEstatesPage);
+        model.addAttribute("activeTab", activeTab);
+        model.addAttribute("hasAdvancedFilter", hasAdvancedFilter);
+        model.addAttribute("hasReAdvancedFilter", hasReAdvancedFilter);
+        model.addAttribute("goodDeal", goodDeal);
+        model.addAttribute("goodDealRe", goodDealRe);
+
         return "home";
     }
 
-    @GetMapping("/listing/{id}")
-    public String listingDetail(@PathVariable Long id, Model model) {
-        // 1. Try to find the listing in the DB by ID
-        Listing listing = listingRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid listing Id:" + id));
+    @GetMapping("/vehicle/{id}")
+    public String vehicleDetail(@PathVariable Integer id, Model model) {
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid vehicle Id:" + id));
+        model.addAttribute("vehicle", vehicle);
+        return "vehicle-detail";
+    }
 
-        // 2. Add it to the model so HTML can see it
-        model.addAttribute("listing", listing);
+    @GetMapping("/realestate/{id}")
+    public String realEstateDetail(@PathVariable Integer id, Model model) {
+        RealEstate realEstate = realEstateRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid real estate Id:" + id));
+        model.addAttribute("realEstate", realEstate);
+        return "realestate-detail";
+    }
 
-        // 3. Return the new HTML file name
-        return "listing-detail";
+    @GetMapping("/post")
+    public String showPostAdForm(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        if (session.getAttribute("loggedInUser") == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to post an ad.");
+            return "redirect:/login";
+        }
+        model.addAttribute("cities", TURKEY_CITIES);
+        return "post-ad";
+    }
+
+    @PostMapping("/post/vehicle")
+    public String postVehicle(@RequestParam String modelName,
+                              @RequestParam Integer modelYear,
+                              @RequestParam BigDecimal price,
+                              @RequestParam Integer kilometers,
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to post an ad.");
+            return "redirect:/login";
+        }
+        // Create listing
+        Listing listing = new Listing(user, price, LocalDate.now(), Listing.Category.Vehicle);
+        listing = listingRepository.save(listing);
+        // Create vehicle
+        Vehicle vehicle = new Vehicle(listing, modelYear, modelName, kilometers);
+        vehicleRepository.save(vehicle);
+        redirectAttributes.addFlashAttribute("success", "Vehicle ad posted successfully!");
+        return "redirect:/post";
+    }
+
+    @PostMapping("/post/realestate")
+    public String postRealEstate(@RequestParam String city,
+                                 @RequestParam String district,
+                                 @RequestParam(required = false) String neighborhood,
+                                 @RequestParam Integer areaSqm,
+                                 @RequestParam String roomConfig,
+                                 @RequestParam BigDecimal price,
+                                 @RequestParam String sellerType,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to post an ad.");
+            return "redirect:/login";
+        }
+        // Create listing
+        Listing listing = new Listing(user, price, LocalDate.now(), Listing.Category.RealEstate);
+        listing = listingRepository.save(listing);
+        // Create real estate
+        RealEstate realEstate = new RealEstate(listing, sellerType, areaSqm, roomConfig,
+                city, district, neighborhood != null ? neighborhood : "Unknown");
+        realEstateRepository.save(realEstate);
+        redirectAttributes.addFlashAttribute("success", "Real estate ad posted successfully!");
+        return "redirect:/post";
+    }
+
+    @GetMapping("/my-ads")
+    public String myAds(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        // Check if the user is logged in
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to see your ads.");
+            return "redirect:/login";
+        }
+
+        // Fetch ads belonging to the logged-in user
+        try {
+            List<Listing> userAds = listingRepository.findByUserId(user.getUserId());
+            model.addAttribute("myAds", userAds);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "An error occurred while fetching your ads.");
+            return "redirect:/";
+        }
+
+        return "my-ads";
+    }
+
+    @PostMapping("/delete-ad/{id}")
+    public String deleteAd(@PathVariable Integer id, HttpSession session, RedirectAttributes redirectAttributes) {
+        User currentUser = (User) session.getAttribute("loggedInUser");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in.");
+            return "redirect:/login";
+        }
+
+        int updated = listingRepository.softDeleteByIdAndUserId(id, currentUser.getUserId());
+        if (updated == 1) {
+            redirectAttributes.addFlashAttribute("success", "Ad deleted successfully.");
+        } else {
+            // either listing doesn't exist or it's not owned by this user (or already deleted)
+            redirectAttributes.addFlashAttribute("error", "Ad not found or unauthorized action.");
+        }
+
+        return "redirect:/my-ads";
+    }
+
+    @PostMapping("/favorites/{listingId}")
+    public String addFavorite(@PathVariable Integer listingId, HttpSession session, RedirectAttributes redirectAttributes) {
+        User currentUser = (User) session.getAttribute("loggedInUser");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to favorite ads.");
+            return "redirect:/login";
+        }
+
+        // avoid duplicates
+        if (favoriteRepository.existsFavorite(currentUser.getUserId(), listingId) == 0) {
+            favoriteRepository.addFavorite(currentUser.getUserId(), listingId);
+            redirectAttributes.addFlashAttribute("success", "Added to favorites.");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Already in favorites.");
+        }
+
+        return "redirect:/";
+    }
+
+    @PostMapping("/favorites/{listingId}/remove")
+    public String removeFavorite(@PathVariable Integer listingId, HttpSession session, RedirectAttributes redirectAttributes) {
+        User currentUser = (User) session.getAttribute("loggedInUser");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in.");
+            return "redirect:/login";
+        }
+
+        int removed = favoriteRepository.removeFavorite(currentUser.getUserId(), listingId);
+        if (removed == 1) {
+            redirectAttributes.addFlashAttribute("success", "Removed from favorites.");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Favorite not found.");
+        }
+
+        return "redirect:/my-favorites";
+    }
+
+    @GetMapping("/my-favorites")
+    public String myFavorites(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to see your favorites.");
+            return "redirect:/login";
+        }
+
+        model.addAttribute("favorites", favoriteRepository.findFavoriteListingsByUserId(user.getUserId()));
+        return "my-favorites";
+    }
+
+    /**
+     * Seeds random favorites for ALL users: each user gets 1-5 favorites.
+     * Uses only active listings not owned by that user, avoids duplicates.
+     */
+    @PostMapping("/favorites/seed")
+    @ResponseBody
+    public String seedRandomFavorites() {
+        List<User> users = userRepository.findAll();
+        Random rnd = new Random();
+
+        for (User u : users) {
+            List<Integer> candidates = listingRepository.findAllActiveListingIdsNotOwnedBy(u.getUserId());
+            if (candidates == null || candidates.isEmpty()) continue;
+
+            Collections.shuffle(candidates, rnd);
+
+            int want = 1 + rnd.nextInt(5);
+            int added = 0;
+
+            for (Integer listingId : candidates) {
+                if (added >= want) break;
+                if (favoriteRepository.existsFavorite(u.getUserId(), listingId) == 0) {
+                    favoriteRepository.addFavorite(u.getUserId(), listingId);
+                    added++;
+                }
+            }
+        }
+
+        return "OK";
     }
 }

@@ -1,36 +1,53 @@
 package com.minisahibinden.repository;
 
-import com.minisahibinden.entity.User;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.minisahibinden.entity.User;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Integer> {
+
+    // Find by email
+    Optional<User> findByEmail(String email);
+
+    // Find by email and password for login
+    Optional<User> findByEmailAndPassword(String email, String password);
 
     // ---------------------------------------------------------
     // COMPLEX QUERY: Top Users by Total Listing Value
     // ---------------------------------------------------------
-    // Returns users ranked by their total listing value and listing count
-    // Uses JOIN with GROUP BY and aggregate functions (SUM, COUNT, AVG)
-    // Includes users even if they have no listings (LEFT JOIN)
     @Query(value = "SELECT " +
-            "u.id AS userId, " +
-            "u.first_name AS firstName, " +
-            "u.last_name AS lastName, " +
+            "u.user_id AS userId, " +
+            "u.full_name AS fullName, " +
             "u.email, " +
-            "COUNT(l.id) AS listingCount, " +
-            "COALESCE(SUM(l.price), 0) AS totalListingValue, " +
-            "COALESCE(AVG(l.price), 0) AS averageListingPrice " +
-            "FROM users u " +
-            "LEFT JOIN listing l ON u.id = l.user_id " +
-            "GROUP BY u.id, u.first_name, u.last_name, u.email " +
-            "HAVING COUNT(l.id) > 0 " +
-            "ORDER BY totalListingValue DESC, listingCount DESC " +
-            "LIMIT :limit",
-            nativeQuery = true)
-    List<Object[]> getTopUsersByListingValue(@Param("limit") int limit);
+            "COUNT(l.listing_id) AS listingCount, " +
+            "COALESCE(SUM(l.price), 0) AS totalValue, " +
+            "COALESCE(AVG(l.price), 0) AS averagePrice " +
+            "FROM Users u " +
+            "LEFT JOIN Listings l ON u.user_id = l.user_id AND l.status = 'Active' " +
+            "GROUP BY u.user_id, u.full_name, u.email " +
+            "ORDER BY totalValue DESC " +
+            "LIMIT 10", nativeQuery = true)
+    List<Object[]> getTopUsersByListingValue();
+
+    // ---------------------------------------------------------
+    // COMPLEX QUERY: Users with listing stats by category
+    // ---------------------------------------------------------
+    @Query(value = "SELECT " +
+            "u.user_id AS userId, " +
+            "u.full_name AS fullName, " +
+            "SUM(CASE WHEN l.category = 'Vehicle' THEN 1 ELSE 0 END) AS vehicleCount, " +
+            "SUM(CASE WHEN l.category = 'RealEstate' THEN 1 ELSE 0 END) AS realEstateCount, " +
+            "COALESCE(SUM(l.price), 0) AS totalValue " +
+            "FROM Users u " +
+            "LEFT JOIN Listings l ON u.user_id = l.user_id AND l.status = 'Active' " +
+            "GROUP BY u.user_id, u.full_name " +
+            "HAVING COUNT(l.listing_id) > 0 " +
+            "ORDER BY totalValue DESC", nativeQuery = true)
+    List<Object[]> getUsersWithListingStats();
 }

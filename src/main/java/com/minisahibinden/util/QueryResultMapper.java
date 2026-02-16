@@ -1,14 +1,12 @@
 package com.minisahibinden.util;
 
-import com.minisahibinden.dto.CategoryStatisticsDTO;
-import com.minisahibinden.dto.ListingDetailDTO;
-import com.minisahibinden.dto.UserListingStatsDTO;
-
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.minisahibinden.dto.CarDetailDTO;
+import com.minisahibinden.dto.UserListingStatsDTO;
+import com.minisahibinden.dto.YearStatisticsDTO;
 
 /**
  * Utility class to map Object[] results from native SQL queries to DTOs
@@ -16,62 +14,70 @@ import java.util.List;
 public class QueryResultMapper {
 
     /**
-     * Maps Object[] array to CategoryStatisticsDTO
-     * Expected order: categoryId, categoryName, listingCount, averagePrice, minPrice, maxPrice, totalValue
+     * Maps Object[] array to YearStatisticsDTO
+     * Expected order: modelYear, carCount, averagePrice, minPrice, maxPrice, totalValue, averageKilometers
      */
-    public static CategoryStatisticsDTO mapToCategoryStatistics(Object[] row) {
+    public static YearStatisticsDTO mapToYearStatistics(Object[] row) {
         if (row == null || row.length < 7) {
             return null;
         }
         
-        CategoryStatisticsDTO dto = new CategoryStatisticsDTO();
-        dto.setCategoryId(((Number) row[0]).longValue());
-        dto.setCategoryName((String) row[1]);
-        dto.setListingCount(((Number) row[2]).longValue());
-        dto.setAveragePrice(convertToBigDecimal(row[3]));
-        dto.setMinPrice(convertToBigDecimal(row[4]));
-        dto.setMaxPrice(convertToBigDecimal(row[5]));
-        dto.setTotalValue(convertToBigDecimal(row[6]));
+        YearStatisticsDTO dto = new YearStatisticsDTO();
+        dto.setModelYear(((Number) row[0]).intValue());
+        dto.setCarCount(((Number) row[1]).longValue());
+        dto.setAveragePrice(convertToBigDecimal(row[2]));
+        dto.setMinPrice(convertToBigDecimal(row[3]));
+        dto.setMaxPrice(convertToBigDecimal(row[4]));
+        dto.setTotalValue(convertToBigDecimal(row[5]));
+        dto.setAverageKilometers(convertToBigDecimal(row[6]));
         
         return dto;
     }
 
     /**
-     * Maps Object[] array to ListingDetailDTO
-     * Expected order: listingId, title, description, price, datePosted, userId, 
-     *                 userFirstName, userLastName, userEmail, categoryId, categoryName
+     * Maps Object[] array to YearStatisticsDTO (simple version for above-average query)
+     * Expected order: modelYear, carCount, averagePrice
      */
-    public static ListingDetailDTO mapToListingDetail(Object[] row) {
-        if (row == null || row.length < 11) {
+    public static YearStatisticsDTO mapToYearStatisticsSimple(Object[] row) {
+        if (row == null || row.length < 3) {
             return null;
         }
         
-        ListingDetailDTO dto = new ListingDetailDTO();
-        dto.setListingId(((Number) row[0]).longValue());
-        dto.setTitle((String) row[1]);
-        dto.setDescription((String) row[2]);
-        dto.setPrice(convertToBigDecimal(row[3]));
+        YearStatisticsDTO dto = new YearStatisticsDTO();
+        dto.setModelYear(((Number) row[0]).intValue());
+        dto.setCarCount(((Number) row[1]).longValue());
+        dto.setAveragePrice(convertToBigDecimal(row[2]));
         
-        // Handle date conversion
-        if (row[4] instanceof Date) {
-            dto.setDatePosted(((Date) row[4]).toLocalDate());
-        } else if (row[4] instanceof LocalDate) {
-            dto.setDatePosted((LocalDate) row[4]);
+        return dto;
+    }
+
+    /**
+     * Maps Object[] array to CarDetailDTO
+     * Expected order: carId, modelYear, model, price, kilometers, userId, 
+     *                 userFirstName, userLastName, userEmail
+     */
+    public static CarDetailDTO mapToCarDetail(Object[] row) {
+        if (row == null || row.length < 9) {
+            return null;
         }
         
+        CarDetailDTO dto = new CarDetailDTO();
+        dto.setCarId(((Number) row[0]).longValue());
+        dto.setModelYear(((Number) row[1]).intValue());
+        dto.setModel((String) row[2]);
+        dto.setPrice(convertToBigDecimal(row[3]));
+        dto.setKilometers(((Number) row[4]).intValue());
         dto.setUserId(((Number) row[5]).longValue());
         dto.setUserFirstName((String) row[6]);
         dto.setUserLastName((String) row[7]);
         dto.setUserEmail((String) row[8]);
-        dto.setCategoryId(((Number) row[9]).longValue());
-        dto.setCategoryName((String) row[10]);
         
         return dto;
     }
 
     /**
      * Maps Object[] array to UserListingStatsDTO
-     * Expected order: userId, firstName, lastName, email, listingCount, totalListingValue, averageListingPrice
+     * Expected order: userId, firstName, lastName, email, carCount, totalCarValue, averageCarPrice
      */
     public static UserListingStatsDTO mapToUserListingStats(Object[] row) {
         if (row == null || row.length < 7) {
@@ -83,40 +89,33 @@ public class QueryResultMapper {
         dto.setFirstName((String) row[1]);
         dto.setLastName((String) row[2]);
         dto.setEmail((String) row[3]);
-        dto.setListingCount(((Number) row[4]).longValue());
-        dto.setTotalListingValue(convertToBigDecimal(row[5]));
-        dto.setAverageListingPrice(convertToBigDecimal(row[6]));
+        dto.setCarCount(((Number) row[4]).longValue());
+        dto.setTotalCarValue(convertToBigDecimal(row[5]));
+        dto.setAverageCarPrice(convertToBigDecimal(row[6]));
         
         return dto;
     }
 
     /**
-     * Maps Object[] array for top listings by category query
-     * Expected order: listingId, title, price, datePosted, categoryName, 
-     *                 userFirstName, userLastName, userEmail, rankInCategory
+     * Maps Object[] array for top cars by year query
+     * Expected order: carId, modelYear, model, price, kilometers, 
+     *                 userFirstName, userLastName, userEmail, rankInYear
      */
-    public static ListingDetailDTO mapToTopListingByCategory(Object[] row) {
+    public static CarDetailDTO mapToTopCarByYear(Object[] row) {
         if (row == null || row.length < 9) {
             return null;
         }
         
-        ListingDetailDTO dto = new ListingDetailDTO();
-        dto.setListingId(((Number) row[0]).longValue());
-        dto.setTitle((String) row[1]);
-        dto.setPrice(convertToBigDecimal(row[2]));
-        
-        // Handle date conversion
-        if (row[3] instanceof Date) {
-            dto.setDatePosted(((Date) row[3]).toLocalDate());
-        } else if (row[3] instanceof LocalDate) {
-            dto.setDatePosted((LocalDate) row[3]);
-        }
-        
-        dto.setCategoryName((String) row[4]);
+        CarDetailDTO dto = new CarDetailDTO();
+        dto.setCarId(((Number) row[0]).longValue());
+        dto.setModelYear(((Number) row[1]).intValue());
+        dto.setModel((String) row[2]);
+        dto.setPrice(convertToBigDecimal(row[3]));
+        dto.setKilometers(((Number) row[4]).intValue());
         dto.setUserFirstName((String) row[5]);
         dto.setUserLastName((String) row[6]);
         dto.setUserEmail((String) row[7]);
-        // rankInCategory is at index 8, but not stored in DTO
+        // rankInYear is at index 8, but not stored in DTO
         
         return dto;
     }
@@ -143,10 +142,10 @@ public class QueryResultMapper {
     /**
      * Batch mapping methods
      */
-    public static List<CategoryStatisticsDTO> mapToCategoryStatisticsList(List<Object[]> rows) {
-        List<CategoryStatisticsDTO> result = new ArrayList<>();
+    public static List<YearStatisticsDTO> mapToYearStatisticsList(List<Object[]> rows) {
+        List<YearStatisticsDTO> result = new ArrayList<>();
         for (Object[] row : rows) {
-            CategoryStatisticsDTO dto = mapToCategoryStatistics(row);
+            YearStatisticsDTO dto = mapToYearStatistics(row);
             if (dto != null) {
                 result.add(dto);
             }
@@ -154,10 +153,21 @@ public class QueryResultMapper {
         return result;
     }
 
-    public static List<ListingDetailDTO> mapToListingDetailList(List<Object[]> rows) {
-        List<ListingDetailDTO> result = new ArrayList<>();
+    public static List<YearStatisticsDTO> mapToYearStatisticsListSimple(List<Object[]> rows) {
+        List<YearStatisticsDTO> result = new ArrayList<>();
         for (Object[] row : rows) {
-            ListingDetailDTO dto = mapToListingDetail(row);
+            YearStatisticsDTO dto = mapToYearStatisticsSimple(row);
+            if (dto != null) {
+                result.add(dto);
+            }
+        }
+        return result;
+    }
+
+    public static List<CarDetailDTO> mapToCarDetailList(List<Object[]> rows) {
+        List<CarDetailDTO> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            CarDetailDTO dto = mapToCarDetail(row);
             if (dto != null) {
                 result.add(dto);
             }

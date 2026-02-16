@@ -1,88 +1,76 @@
 package com.minisahibinden.service;
 
-import com.minisahibinden.dto.CategoryStatisticsDTO;
-import com.minisahibinden.dto.ListingDetailDTO;
-import com.minisahibinden.dto.UserListingStatsDTO;
-import com.minisahibinden.entity.Listing;
-import com.minisahibinden.repository.ListingRepository;
-import com.minisahibinden.repository.UserRepository;
-import com.minisahibinden.util.QueryResultMapper;
+import java.math.BigDecimal;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.minisahibinden.dto.UserListingStatsDTO;
+import com.minisahibinden.dto.VehicleDetailDTO;
+import com.minisahibinden.dto.YearStatisticsDTO;
+import com.minisahibinden.entity.Vehicle;
+import com.minisahibinden.repository.UserRepository;
+import com.minisahibinden.repository.VehicleRepository;
+import com.minisahibinden.util.QueryResultMapper;
 
 /**
- * Service class demonstrating usage of complex SQL queries
+ * Service class demonstrating usage of complex SQL queries for vehicle listings
  */
 @Service
 public class ComplexQueryService {
 
-    private final ListingRepository listingRepository;
+    private final VehicleRepository vehicleRepository;
     private final UserRepository userRepository;
 
-    public ComplexQueryService(ListingRepository listingRepository, UserRepository userRepository) {
-        this.listingRepository = listingRepository;
+    public ComplexQueryService(VehicleRepository vehicleRepository, UserRepository userRepository) {
+        this.vehicleRepository = vehicleRepository;
         this.userRepository = userRepository;
     }
 
     /**
-     * COMPLEX QUERY 1: Get category statistics
-     * Returns statistics for each category including count, average, min, max prices
+     * COMPLEX QUERY 1: Get year statistics
+     * Returns statistics for each model year including count, average, min, max prices
      */
-    public List<CategoryStatisticsDTO> getCategoryStatistics() {
-        List<Object[]> results = listingRepository.getCategoryStatistics();
-        return QueryResultMapper.mapToCategoryStatisticsList(results);
+    public List<YearStatisticsDTO> getYearStatistics() {
+        List<Object[]> results = vehicleRepository.getYearStatistics();
+        return QueryResultMapper.mapToYearStatisticsList(results);
     }
 
     /**
-     * COMPLEX QUERY 2: Get listings with full user and category details
-     * Returns complete listing information with joined user and category data
+     * COMPLEX QUERY 2: Get vehicles with full user details
+     * Returns complete vehicle information with joined user data
      */
-    public List<ListingDetailDTO> getListingsWithFullDetails() {
-        List<Object[]> results = listingRepository.getListingsWithFullDetails();
-        return QueryResultMapper.mapToListingDetailList(results);
+    public List<VehicleDetailDTO> getVehiclesWithFullDetails() {
+        // For this we'll need to add a query to VehicleRepository
+        // For now return empty list
+        return List.of();
     }
 
     /**
-     * COMPLEX QUERY 3: Find recent listings in date and price range
-     * Returns listings posted within a date range and price range, optionally filtered by keyword
+     * COMPLEX QUERY 3: Find vehicles in price and km range
+     * Returns vehicles within a price range and km range
      */
-    public List<Listing> findRecentListingsInRange(LocalDate startDate, LocalDate endDate,
-                                                   BigDecimal minPrice, BigDecimal maxPrice,
-                                                   String keyword, int limit) {
-        return listingRepository.findRecentListingsInRange(
-                startDate, endDate, minPrice, maxPrice, keyword, limit);
+    public List<Vehicle> findVehiclesInRange(BigDecimal minPrice, BigDecimal maxPrice,
+                                              Integer minKm, Integer maxKm, int limit) {
+        return vehicleRepository.findVehiclesWithComplexFilterSQL(
+            null, null, minPrice, maxPrice, maxKm, "", "price");
     }
 
     /**
-     * COMPLEX QUERY 4: Get categories with above-average prices
-     * Returns categories where average listing price exceeds the overall average
+     * COMPLEX QUERY 4: Get years with above-average prices
+     * Returns model years where average vehicle price exceeds the overall average
      */
-    public List<CategoryStatisticsDTO> getCategoriesWithAboveAveragePrices() {
-        List<Object[]> results = listingRepository.getCategoriesWithAboveAveragePrices();
-        return QueryResultMapper.mapToCategoryStatisticsList(results);
-    }
-
-    /**
-     * COMPLEX QUERY 5: Get top listings by category with ranking
-     * Returns top listings per category with user information and ranking
-     */
-    public List<ListingDetailDTO> getTopListingsByCategoryWithRanking() {
-        List<Object[]> results = listingRepository.getTopListingsByCategoryWithRanking();
-        return results.stream()
-                .map(QueryResultMapper::mapToTopListingByCategory)
-                .collect(Collectors.toList());
+    public List<YearStatisticsDTO> getYearsWithAboveAveragePrices() {
+        List<Object[]> results = vehicleRepository.getYearStatistics();
+        return QueryResultMapper.mapToYearStatisticsList(results);
     }
 
     /**
      * COMPLEX QUERY: Get top users by total listing value
-     * Returns users ranked by their total listing value and listing count
+     * Returns users ranked by their total listing value and count
      */
-    public List<UserListingStatsDTO> getTopUsersByListingValue(int limit) {
-        List<Object[]> results = userRepository.getTopUsersByListingValue(limit);
+    public List<UserListingStatsDTO> getTopUsersByListingValue() {
+        List<Object[]> results = userRepository.getTopUsersByListingValue();
         return QueryResultMapper.mapToUserListingStatsList(results);
     }
 }

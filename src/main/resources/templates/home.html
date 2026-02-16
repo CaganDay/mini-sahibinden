@@ -1,111 +1,545 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Mini Sahibinden</title>
+    <title>Mini Sahibinden - Marketplace</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .advert-card:hover { transform: translateY(-5px); transition: 0.3s; cursor: pointer; }
+        .card-listing:hover { transform: translateY(-5px); transition: 0.3s; cursor: pointer; }
+        .nav-pills .nav-link.active { background-color: #ffc107; color: #000; }
+        .nav-pills .nav-link { color: #333; }
     </style>
 </head>
 <body class="bg-light">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-warning pb-3 pt-3" style="background-color: #f8f9fa!important; border-bottom: 1px solid #ddd;">
     <div class="container">
-        <a class="navbar-brand fw-bold text-dark" href="#">mini<span class="bg-warning px-1 rounded border border-dark">sahibinden</span>.com</a>
+        <a class="navbar-brand fw-bold text-dark" href="/">mini<span class="bg-warning px-1 rounded border border-dark">sahibinden</span>.com</a>
         
-        <form class="d-flex w-50 mx-auto" th:action="@{/}" method="get">
-            <input class="form-control me-2" type="search" name="keyword" 
-                   placeholder="Search for ads..." aria-label="Search" 
-                   th:value="${param.keyword}"> <button class="btn btn-outline-dark" type="submit">Search</button>
+        <form class="d-flex w-50 mx-auto" th:action="@{/}" method="get" id="searchForm">
+            <input class="form-control me-2" type="search" name="keyword" id="searchInput"
+                   th:placeholder="${activeTab == 'realestate'} ? 'Search by city, district...' : 'Search vehicles by model name...'"
+                   aria-label="Search" th:value="${param.keyword}">
+            <input type="hidden" name="tab" id="tabInput" th:value="${activeTab}">
+            <button class="btn btn-outline-dark" type="submit">Search</button>
         </form>
 
         <div class="navbar-nav ms-auto">
             <a class="btn btn-outline-dark btn-sm ms-2" th:href="@{/queries}">
                 <i class="fa-solid fa-database"></i> Complex Queries
             </a>
-            <a class="btn btn-primary btn-sm ms-3 text-white fw-bold shadow-sm" href="#">+ Post Ad</a>
+            <a class="btn btn-primary btn-sm ms-3 text-white fw-bold shadow-sm" th:href="@{/post}">+ Post Ad</a>
+            
+            <div th:if="${session.loggedInUser != null}" class="d-flex align-items-center ms-3">
+                <a class="btn btn-outline-dark btn-sm me-2" th:href="@{/my-favorites}">
+                    <i class="fa-solid fa-heart"></i> My Favorites
+                </a>
+                <a class="btn btn-outline-dark btn-sm me-3" th:href="@{/my-ads}">
+                    <i class="fa-solid fa-list"></i> My Ads
+                </a>
+                <span class="text-dark me-2">
+                    <i class="fa-solid fa-user-circle"></i> 
+                    <span th:text="${session.loggedInUserName}">User</span>
+                </span>
+                <a class="btn btn-outline-danger btn-sm" th:href="@{/logout}">
+                    <i class="fa-solid fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+            <div th:unless="${session.loggedInUser != null}" class="d-flex align-items-center ms-3">
+                <a class="btn btn-outline-dark btn-sm me-2" th:href="@{/login}">
+                    <i class="fa-solid fa-sign-in-alt"></i> Login
+                </a>
+                <a class="btn btn-success btn-sm" th:href="@{/register}">
+                    <i class="fa-solid fa-user-plus"></i> Register
+                </a>
+            </div>
         </div>
     </div>
 </nav>
 
 <div class="container mt-4">
-    <div class="row">
-        
-        <div class="col-md-3">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white fw-bold">Categories</div>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center" th:each="cat : ${categories}">
-                        <a th:href="@{/(categoryId=${cat.id})}" 
-                           class="text-decoration-none text-dark" 
-                           th:text="${cat.name}">Category Name</a>
-                        
-                        <span class="badge bg-secondary rounded-pill">></span>
-                    </li>
-                    
-                    <li class="list-group-item">
-                        <a href="/" class="text-decoration-none text-primary fw-bold">Show All</a>
-                    </li>
-                </ul>
-            </div>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-circle-exclamation me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 
-            <div class="card shadow-sm">
-                <div class="card-header bg-white fw-bold">Filter</div>
-                <div class="card-body">
-                    <select class="form-select mb-3">
-                        <option selected>All Cities</option>
-                        <option value="1">Istanbul</option>
-                        <option value="2">Ankara</option>
-                        <option value="3">Izmir</option>
-                    </select>
-                    <button class="btn btn-primary w-100">Apply Filter</button>
+    <ul class="nav nav-pills mb-4" id="categoryTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button th:class="${activeTab == 'vehicles'} ? 'nav-link active' : 'nav-link'" id="vehicles-tab" data-bs-toggle="pill" data-bs-target="#vehicles-section" type="button" role="tab">
+                <i class="fa-solid fa-car"></i> Vehicles <span class="badge bg-secondary" th:text="${vehiclesPage.totalElements}">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button th:class="${activeTab == 'realestate'} ? 'nav-link active' : 'nav-link'" id="realestate-tab" data-bs-toggle="pill" data-bs-target="#realestate-section" type="button" role="tab">
+                <i class="fa-solid fa-house"></i> Real Estate <span class="badge bg-secondary" th:text="${realEstatesPage.totalElements}">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="categoryTabsContent">
+        <div th:class="${activeTab == 'vehicles'} ? 'tab-pane fade show active' : 'tab-pane fade'" id="vehicles-section" role="tabpanel">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-warning fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-filter"></i> Filter Vehicles</span>
+                            <a href="/" class="btn btn-sm btn-outline-dark" th:if="${hasAdvancedFilter}">Clear</a>
+                        </div>
+                        <div class="card-body">
+                            <form action="/" method="get" id="vehicleFilterForm">
+                                <input type="hidden" name="tab" value="vehicles">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Model Name</label>
+                                    <input type="text" class="form-control form-control-sm" name="modelName" 
+                                           th:value="${param.modelName}" placeholder="e.g. BMW, Mercedes...">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Model Year</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <select class="form-select form-select-sm" name="minYear">
+                                                <option value="">Min</option>
+                                                <option th:each="y : ${years}" th:value="${y}" th:text="${y}"
+                                                        th:selected="${param.minYear != null && param.minYear[0] == #strings.toString(y)}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <select class="form-select form-select-sm" name="maxYear">
+                                                <option value="">Max</option>
+                                                <option th:each="y : ${years}" th:value="${y}" th:text="${y}"
+                                                        th:selected="${param.maxYear != null && param.maxYear[0] == #strings.toString(y)}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Price (TL)</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="minPrice" 
+                                                   th:value="${param.minPrice}" placeholder="Min" min="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="maxPrice" 
+                                                   th:value="${param.maxPrice}" placeholder="Max" min="0">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted" th:if="${priceMin != null}">
+                                        Range: <span th:text="${#numbers.formatDecimal(priceMin, 0, 'COMMA', 0, 'POINT')}">0</span> - 
+                                        <span th:text="${#numbers.formatDecimal(priceMax, 0, 'COMMA', 0, 'POINT')}">0</span> TL
+                                    </small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Kilometers</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="minKm" 
+                                                   th:value="${param.minKm}" placeholder="Min" min="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="maxKm" 
+                                                   th:value="${param.maxKm}" placeholder="Max" min="0">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted" th:if="${kmMin != null}">
+                                        Range: <span th:text="${#numbers.formatDecimal(kmMin, 0, 'COMMA', 0, 'POINT')}">0</span> - 
+                                        <span th:text="${#numbers.formatDecimal(kmMax, 0, 'COMMA', 0, 'POINT')}">0</span> km
+                                    </small>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-warning w-100 fw-bold">
+                                    <i class="fa-solid fa-search"></i> Apply Filters
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white fw-bold">Quick Filter by Year</div>
+                        <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-1" th:each="y : ${years}">
+                                <a th:href="@{/(year=${y})}" class="text-decoration-none text-dark small" th:text="${y}">Year</a>
+                                <span class="badge bg-secondary rounded-pill" style="font-size: 0.7rem;">></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-9">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0"><i class="fa-solid fa-car"></i> Available Vehicles</h4>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <a class="btn btn-sm btn-outline-success"
+                               th:href="@{/(tab='vehicles', goodDeal=true, goodDealPage=0,
+                                           keyword=${param.keyword}, year=${param.year},
+                                           minYear=${param.minYear}, maxYear=${param.maxYear},
+                                           minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                           minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">
+                                Get a good deal
+                            </a>
+
+                            <span class="badge bg-secondary" th:if="${hasAdvancedFilter}">
+                                <i class="fa-solid fa-filter"></i> Filters applied
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${#lists.isEmpty(vehicles)}" class="alert alert-info">
+                        No vehicles found matching your criteria. <a href="/">Clear filters</a>
+                    </div>
+
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        <div class="col" th:each="vehicle : ${vehicles}">
+                            <div class="card h-100 shadow-sm card-listing">
+                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;">
+                                    <i class="fa-solid fa-car fa-3x"></i>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title text-truncate" th:text="${vehicle.modelYear + ' ' + vehicle.modelName}">Vehicle</h5>
+                                    <p class="card-text text-primary fw-bold mb-1" 
+                                        th:text="${#numbers.formatDecimal(vehicle.listing.price, 0, 'COMMA', 0, 'POINT')} + ' TL'">0 TL</p>
+                                    <small class="text-muted">
+                                        <i class="fa-solid fa-road"></i> 
+                                        <span th:text="${#numbers.formatDecimal(vehicle.kilometers, 0, 'COMMA', 0, 'POINT')} + ' km'">0 km</span>
+                                    </small>
+                                </div>
+                                <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+                                    <small class="text-muted" th:text="'Year: ' + ${vehicle.modelYear}">Year</small>
+                                    <div class="d-flex gap-2">
+                                        <a th:href="@{/vehicle/{id}(id=${vehicle.listingId})}" class="btn btn-sm btn-outline-primary">View</a>
+
+                                        <form th:if="${session.loggedInUser != null}"
+                                              th:action="@{/favorites/{id}(id=${vehicle.listingId})}"
+                                              method="post" class="m-0">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Add to favorites">
+                                                <i class="fa-solid fa-heart"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <nav th:if="${vehiclesPage.totalPages > 1}" class="mt-4" aria-label="Vehicle page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" th:classappend="${vehiclesPage.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : vehiclesPage.number - 1)},
+                                               goodDealPage=${(goodDeal ? vehiclesPage.number - 1 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">«</a>
+                            </li>
+
+                            <li class="page-item" th:if="${vehiclesPage.number > 0}">
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : 0)},
+                                               goodDealPage=${(goodDeal ? 0 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">1</a>
+                            </li>
+
+                            <li class="page-item disabled" th:if="${vehiclesPage.number > 2}">
+                                <span class="page-link">...</span>
+                            </li>
+
+                            <li class="page-item" th:if="${vehiclesPage.number > 1}">
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : vehiclesPage.number - 1)},
+                                               goodDealPage=${(goodDeal ? vehiclesPage.number - 1 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}"
+                                   th:text="${vehiclesPage.number}"></a>
+                            </li>
+
+                            <li class="page-item active">
+                                <span class="page-link" th:text="${vehiclesPage.number + 1}"></span>
+                            </li>
+
+                            <li class="page-item" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 2}">
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : vehiclesPage.number + 1)},
+                                               goodDealPage=${(goodDeal ? vehiclesPage.number + 1 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}"
+                                   th:text="${vehiclesPage.number + 2}"></a>
+                            </li>
+
+                            <li class="page-item disabled" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 3}">
+                                <span class="page-link">...</span>
+                            </li>
+
+                            <li class="page-item" th:if="${vehiclesPage.number < vehiclesPage.totalPages - 1}">
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : vehiclesPage.totalPages - 1)},
+                                               goodDealPage=${(goodDeal ? vehiclesPage.totalPages - 1 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}"
+                                   th:text="${vehiclesPage.totalPages}"></a>
+                            </li>
+
+                            <li class="page-item" th:classappend="${vehiclesPage.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/(vehiclePage=${(goodDeal ? vehiclePage : vehiclesPage.number + 1)},
+                                               goodDealPage=${(goodDeal ? vehiclesPage.number + 1 : goodDealPage)},
+                                               goodDeal=${param.goodDeal},
+                                               keyword=${param.keyword}, year=${param.year},
+                                               minYear=${param.minYear}, maxYear=${param.maxYear},
+                                               minPrice=${param.minPrice}, maxPrice=${param.maxPrice},
+                                               minKm=${param.minKm}, maxKm=${param.maxKm}, modelName=${param.modelName})}">»</a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-9">
-            <h4 class="mb-3">Showcase</h4>
-            
-            <div th:if="${#lists.isEmpty(listings)}" class="alert alert-info">
-                No listings found in the database.
-            </div>
-
-            <div class="row row-cols-1 row-cols-md-3 g-4">
-                
-                <div class="col" th:each="ad : ${listings}">
-                    <div class="card h-100 shadow-sm advert-card">
-                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;">
-                            <i class="fa-solid fa-image fa-3x"></i>
+        <div th:class="${activeTab == 'realestate'} ? 'tab-pane fade show active' : 'tab-pane fade'" id="realestate-section" role="tabpanel">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-success text-white fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-filter"></i> Filter Real Estate</span>
+                            <a href="/?tab=realestate" class="btn btn-sm btn-outline-light" th:if="${hasReAdvancedFilter}">Clear</a>
                         </div>
-                        
                         <div class="card-body">
-                            <h5 class="card-title text-truncate" th:text="${ad.title}">Ad Title</h5>
-                            <p class="card-text text-primary fw-bold mb-1" 
-                                th:text="${#numbers.formatDecimal(ad.price, 0, 'COMMA', 0, 'POINT')} + ' TL'">
-                                0 TL
-                            </p>
-                            
-                            <small class="text-muted">
-                                <i class="fa-solid fa-tag"></i> 
-                                <span th:text="${ad.category != null ? ad.category.name : 'Uncategorized'}">Category</span>
-                            </small>
-                        </div>
-                        <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
-                            <small class="text-muted" th:text="${ad.datePosted}">Date</small>
-                            <a th:href="@{/listing/{id}(id=${ad.id})}" class="btn btn-sm btn-outline-primary">View</a>
+                            <form action="/" method="get" id="realEstateFilterForm">
+                                <input type="hidden" name="tab" value="realestate">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">City</label>
+                                    <select class="form-select form-select-sm" name="filterCity">
+                                        <option value="">All Cities</option>
+                                        <option th:each="c : ${cities}" th:value="${c}" th:text="${c}"
+                                                th:selected="${param.filterCity != null && param.filterCity[0] == c}"></option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Room Config</label>
+                                    <select class="form-select form-select-sm" name="filterRoomConfig">
+                                        <option value="">All Configs</option>
+                                        <option th:each="rc : ${roomConfigs}" th:value="${rc}" th:text="${rc}"
+                                                th:selected="${param.filterRoomConfig != null && param.filterRoomConfig[0] == rc}"></option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Seller Type</label>
+                                    <select class="form-select form-select-sm" name="filterSellerType">
+                                        <option value="">All Types</option>
+                                        <option th:each="st : ${sellerTypes}" th:value="${st}" th:text="${st}"
+                                                th:selected="${param.filterSellerType != null && param.filterSellerType[0] == st}"></option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Price (TL)</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="minPriceRe" 
+                                                   th:value="${param.minPriceRe}" placeholder="Min" min="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="maxPriceRe" 
+                                                   th:value="${param.maxPriceRe}" placeholder="Max" min="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Area (m²)</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="minArea" 
+                                                   th:value="${param.minArea}" placeholder="Min" min="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" name="maxArea" 
+                                                   th:value="${param.maxArea}" placeholder="Max" min="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 fw-bold">
+                                    <i class="fa-solid fa-search"></i> Apply Filters
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
 
+                <div class="col-md-9">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0"><i class="fa-solid fa-house"></i> Available Real Estate</h4>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <a class="btn btn-sm btn-outline-success"
+                               th:href="@{/(tab='realestate', goodDealRe=true, goodDealRePage=0,
+                                           keyword=${param.keyword},
+                                           filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                           minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">
+                                Get a good deal
+                            </a>
+
+                            <span class="badge bg-success" th:if="${hasReAdvancedFilter}">
+                                <i class="fa-solid fa-filter"></i> Filters applied
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${#lists.isEmpty(realEstates)}" class="alert alert-info">
+                        No real estate found matching your criteria. <a href="/?tab=realestate">Clear filters</a>
+                    </div>
+
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        <div class="col" th:each="re : ${realEstates}">
+                            <div class="card h-100 shadow-sm card-listing">
+                                <div class="bg-success text-white d-flex align-items-center justify-content-center" style="height: 180px;">
+                                    <i class="fa-solid fa-house fa-3x"></i>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title text-truncate" th:text="${re.city + ', ' + re.district}">Location</h5>
+                                    <p class="card-text text-success fw-bold mb-1" 
+                                        th:text="${#numbers.formatDecimal(re.listing.price, 0, 'COMMA', 0, 'POINT')} + ' TL'">0 TL</p>
+                                    <small class="text-muted d-block">
+                                        <i class="fa-solid fa-ruler-combined"></i> 
+                                        <span th:text="${re.areaSqm} + ' m²'">0 m²</span>
+                                        &nbsp;|&nbsp;
+                                        <i class="fa-solid fa-door-open"></i> 
+                                        <span th:text="${re.roomConfig}">0</span>
+                                    </small>
+                                </div>
+                                <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+                                    <small class="text-muted" th:text="${re.neighborhood}">Neighborhood</small>
+                                    <div class="d-flex gap-2">
+                                        <a th:href="@{/realestate/{id}(id=${re.listingId})}" class="btn btn-sm btn-outline-success">View</a>
+
+                                        <form th:if="${session.loggedInUser != null}"
+                                              th:action="@{/favorites/{id}(id=${re.listingId})}"
+                                              method="post" class="m-0">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Add to favorites">
+                                                <i class="fa-solid fa-heart"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <nav th:if="${realEstatesPage.totalPages > 1}" class="mt-4" aria-label="Real Estate page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" th:classappend="${realEstatesPage.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : realEstatesPage.number - 1)},
+                                               goodDealRePage=${(goodDealRe ? realEstatesPage.number - 1 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">«</a>
+                            </li>
+
+                            <li class="page-item" th:if="${realEstatesPage.number > 0}">
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : 0)},
+                                               goodDealRePage=${(goodDealRe ? 0 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">1</a>
+                            </li>
+
+                            <li class="page-item disabled" th:if="${realEstatesPage.number > 2}">
+                                <span class="page-link">...</span>
+                            </li>
+
+                            <li class="page-item" th:if="${realEstatesPage.number > 1}">
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : realEstatesPage.number - 1)},
+                                               goodDealRePage=${(goodDealRe ? realEstatesPage.number - 1 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}"
+                                   th:text="${realEstatesPage.number}">X</a>
+                            </li>
+
+                            <li class="page-item active">
+                                <span class="page-link" th:text="${realEstatesPage.number + 1}">X</span>
+                            </li>
+
+                            <li class="page-item" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 2}">
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : realEstatesPage.number + 1)},
+                                               goodDealRePage=${(goodDealRe ? realEstatesPage.number + 1 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}"
+                                   th:text="${realEstatesPage.number + 2}">X</a>
+                            </li>
+
+                            <li class="page-item disabled" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 3}">
+                                <span class="page-link">...</span>
+                            </li>
+
+                            <li class="page-item" th:if="${realEstatesPage.number < realEstatesPage.totalPages - 1}">
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : realEstatesPage.totalPages - 1)},
+                                               goodDealRePage=${(goodDealRe ? realEstatesPage.totalPages - 1 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}"
+                                   th:text="${realEstatesPage.totalPages}">N</a>
+                            </li>
+
+                            <li class="page-item" th:classappend="${realEstatesPage.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/(realestatePage=${(goodDealRe ? realestatePage : realEstatesPage.number + 1)},
+                                               goodDealRePage=${(goodDealRe ? realEstatesPage.number + 1 : goodDealRePage)},
+                                               tab='realestate', goodDealRe=${param.goodDealRe}, keyword=${param.keyword},
+                                               filterCity=${param.filterCity}, filterRoomConfig=${param.filterRoomConfig}, filterSellerType=${param.filterSellerType},
+                                               minPriceRe=${param.minPriceRe}, maxPriceRe=${param.maxPriceRe}, minArea=${param.minArea}, maxArea=${param.maxArea})}">»</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <footer class="mt-5 py-3 text-center text-muted border-top">
-    <small>&copy; 2025 Mini-Sahibinden Project</small>
+    <small>&copy; 2025 Mini-Sahibinden Marketplace</small>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('vehicles-tab').addEventListener('click', function() {
+        document.getElementById('tabInput').value = 'vehicles';
+        document.getElementById('searchInput').placeholder = 'Search vehicles by model name...';
+    });
+    document.getElementById('realestate-tab').addEventListener('click', function() {
+        document.getElementById('tabInput').value = 'realestate';
+        document.getElementById('searchInput').placeholder = 'Search by city, district...';
+    });
+</script>
 </body>
 </html>

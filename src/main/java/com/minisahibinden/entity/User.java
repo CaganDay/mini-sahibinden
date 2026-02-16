@@ -1,34 +1,80 @@
 package com.minisahibinden.entity;
 
-import jakarta.persistence.*; // Uses Jakarta for Spring Boot 3+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
 @Entity
-@Table(name = "users") // "user" is a reserved word in SQL, so we use "users"
+@Table(name = "Users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id")
+    private Integer userId;
 
-    private String firstName;
-    private String lastName;
+    @Column(name = "full_name", nullable = false, length = 100)
+    private String fullName;
+
+    @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
-    // One User can have many Listings
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Listing> listings;
+    @Column(name = "phone", length = 20)
+    private String phone;
 
-    // Empty Constructor (Required by JPA)
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;
+
+    @Column(name = "registration_date")
+    private LocalDateTime registrationDate;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Listing> listings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Favorite> favorites = new ArrayList<>();
+
     public User() {}
 
-    // Standard Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
+    public User(String fullName, String email, String phone, String password) {
+        this.fullName = fullName;
+        this.email = email;
+        this.phone = phone;
+        this.password = password;
+        this.registrationDate = LocalDateTime.now();
+    }
+
+    // Getters and Setters
+    public Integer getUserId() { return userId; }
+    public void setUserId(Integer userId) { this.userId = userId; }
+
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public LocalDateTime getRegistrationDate() { return registrationDate; }
+    public void setRegistrationDate(LocalDateTime registrationDate) { this.registrationDate = registrationDate; }
+
+    public List<Listing> getListings() { return listings; }
+    public void setListings(List<Listing> listings) { this.listings = listings; }
+
+    public List<Favorite> getFavorites() { return favorites; }
+    public void setFavorites(List<Favorite> favorites) { this.favorites = favorites; }
 }
